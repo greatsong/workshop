@@ -31,6 +31,11 @@
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
     letter-spacing:-.01em;
+    /* 한글은 어절(띄어쓰기) 단위로만 줄바꿈 — '규 / 칙.' 처럼 쪼개지지 않게.
+       word-break/overflow-wrap 은 상속되므로 모든 텍스트 요소에 그대로 적용된다.
+       overflow-wrap 은 한 어절이 줄 너비를 넘는 예외 상황의 안전장치. */
+    word-break:keep-all;
+    overflow-wrap:break-word;
   }
 
   /* subtle vignette + grain so pure black feels crafted, not flat */
@@ -103,7 +108,8 @@
     font-weight:400;
     color:var(--ink-dim);
     letter-spacing:.02em;
-    max-width:22ch;
+    /* em ≈ 한글 한 글자. ch(=‘0’ 너비, 약 .5em)로 잡으면 의도한 <br> 줄이 또 접힌다 */
+    max-width:min(100%, 20em);
     line-height:1.6;
   }
   .amber{ color:var(--amber); }
@@ -116,10 +122,17 @@
     font-weight:300;
     line-height:1.4;
     letter-spacing:-.015em;
-    max-width:20ch;
+    max-width:min(100%, 22em);
     color:var(--ink);
   }
   .lead b{ font-weight:800; letter-spacing:-.025em; }
+  /* scene 4 only — the question carries the deck, so it goes big */
+  .lead.big{
+    font-size:clamp(38px, 8.6vw, 118px);
+    line-height:1.12;
+    letter-spacing:-.03em;
+    max-width:min(100%, 14em);
+  }
 
   /* ---- Shapes ---- */
   .glyph{
@@ -170,11 +183,16 @@
     box-shadow:0 0 40px rgba(243,176,58,.35), 0 0 100px rgba(243,176,58,.16);
     z-index:2;
   }
-  /* the bit side — the other end of the exchange */
+  /* the bit side — the other end of the exchange, slowly widening */
   .sweep .bits-s{
     position:absolute; top:50%; left:5%; transform:translateY(-50%);
     display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(5px,.9vh,9px);
     z-index:2;
+  }
+  .slide.active .sweep .bits-s{ animation:bitswell 9s var(--ease) infinite; }
+  @keyframes bitswell{
+    0%,100%{ transform:translateY(-50%) scale(1); }
+    50%{ transform:translateY(-50%) scale(1.18); }
   }
   .sweep .bits-s i{
     display:block;
@@ -189,22 +207,23 @@
     position:absolute; width:clamp(9px,1.5vh,15px); height:clamp(9px,1.5vh,15px);
     border-radius:2px; background:var(--cyan); box-shadow:0 0 8px rgba(90,214,230,.6);
     opacity:0;
-    --x0:-40px; --op:.92;
+    --x0:-40px; --op:.92; --s1:1.45; /* bits grow as they travel — the widening */
   }
-  /* atom particle — small amber circle, travels back toward the bits */
+  /* atom particle — small amber circle, travels back toward the bits.
+     holds its size and count, so the cyan side reads as the one expanding */
   .sweep .p.atom-p{
     width:clamp(7px,1.2vh,12px); height:clamp(7px,1.2vh,12px);
     border-radius:50%;
     background:radial-gradient(circle at 38% 32%, var(--amber-soft), var(--amber) 70%);
     box-shadow:0 0 8px rgba(243,176,58,.55);
-    --x0:40px; --op:.72;
+    --x0:40px; --op:.72; --s1:1;
   }
   .slide.active .sweep .p{ animation:drift 3.4s var(--ease) infinite; } /* per-particle duration/delay set inline */
   @keyframes drift{
     0%{ opacity:0; transform:translateX(var(--x0,-40px)) scale(.6); }
     18%{ opacity:var(--op,.92); }
     75%{ opacity:calc(var(--op,.92) * .88); }
-    100%{ opacity:0; transform:translateX(var(--dx,320px)) scale(1); }
+    100%{ opacity:0; transform:translateX(var(--dx,320px)) scale(var(--s1,1)); }
   }
 
   /* Scene 7: line connecting atom and bit */
@@ -358,7 +377,7 @@
   <!-- 4. 질문 -->
   <section class="slide" data-i="3" aria-label="질문">
     <div class="kicker rise">Question</div>
-    <h2 class="lead rise d1"><b>10년 후</b>를<br>예측한다면?</h2>
+    <h2 class="lead big rise d1"><b>10년 후</b>를<br>예측한다면?</h2>
   </section>
 
   <!-- 5. 비트가 넓어진다 -->
@@ -370,7 +389,7 @@
     </div>
     <h2 class="lead rise d2">
       <span class="cyan">비트</span>의 세상은 더 넓어지고,<br>
-      <b class="amber">아톰</b>의 세상과<br>서로 더 큰 영향을 주고받을 것이다
+      <b class="amber">아톰</b>의 세상과<br>서로 더 큰 영향을 주고받을 것
     </h2>
   </section>
 
@@ -464,7 +483,11 @@
       var dx = isAtom ? -dist : dist;
       // atoms start by the amber circle, bits start by the bit cluster
       var left = isAtom ? (76 + Math.random()*20) : (Math.random()*20);
-      p.style.top = Math.round(8 + Math.random()*80) + '%';
+      // bits fan out across the whole field; atoms keep to a narrow central lane,
+      // so the cyan side visibly claims more ground than the amber side
+      p.style.top = (isAtom
+        ? Math.round(30 + Math.random()*40)
+        : Math.round(5 + Math.random()*83)) + '%';
       p.style.left = Math.round(left) + '%';
       p.style.setProperty('--dx', dx + 'px');
       p.style.setProperty('--half', Math.round(dx/2) + 'px'); // reduced-motion resting spot
@@ -472,8 +495,9 @@
       p.style.animationDuration = (isAtom ? 3.7 + Math.random()*.9 : 3.1 + Math.random()*.8).toFixed(2) + 's';
       field.appendChild(p);
     };
-    for(var s=0; s<12; s++){ spawn(false); }
-    for(var a=0; a<10; a++){ spawn(true); }
+    // more cyan than amber: the bit world is the one gaining ground
+    for(var s=0; s<17; s++){ spawn(false); }
+    for(var a=0; a<8; a++){ spawn(true); }
   }
 
   function render(){
