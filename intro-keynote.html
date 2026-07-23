@@ -156,7 +156,7 @@
   .slide.active .bits .bit{ animation:pixIn .5s var(--ease) both; }
   @keyframes pixIn{ from{ opacity:0; transform:scale(.4); } to{ opacity:.9; transform:none; } }
 
-  /* Scene 5: bits sweep toward atom */
+  /* Scene 5: bits and atoms exchange — two crossing flows */
   .sweep{
     width:min(760px, 84vw);
     height:clamp(120px,24vh,220px);
@@ -170,17 +170,40 @@
     box-shadow:0 0 40px rgba(243,176,58,.35), 0 0 100px rgba(243,176,58,.16);
     z-index:2;
   }
+  /* the bit side — the other end of the exchange */
+  .sweep .bits-s{
+    position:absolute; top:50%; left:5%; transform:translateY(-50%);
+    display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(5px,.9vh,9px);
+    z-index:2;
+  }
+  .sweep .bits-s i{
+    display:block;
+    width:clamp(11px,1.8vh,18px); height:clamp(11px,1.8vh,18px);
+    border-radius:3px; background:var(--cyan);
+    box-shadow:0 0 10px rgba(90,214,230,.45);
+    opacity:.9;
+  }
   .sweep .field{ position:absolute; inset:0; }
+  /* bit particle — small cyan square, travels toward the atom */
   .sweep .p{
     position:absolute; width:clamp(9px,1.5vh,15px); height:clamp(9px,1.5vh,15px);
     border-radius:2px; background:var(--cyan); box-shadow:0 0 8px rgba(90,214,230,.6);
     opacity:0;
+    --x0:-40px; --op:.92;
   }
-  .slide.active .sweep .p{ animation:drift 3.4s var(--ease) infinite; }
+  /* atom particle — small amber circle, travels back toward the bits */
+  .sweep .p.atom-p{
+    width:clamp(7px,1.2vh,12px); height:clamp(7px,1.2vh,12px);
+    border-radius:50%;
+    background:radial-gradient(circle at 38% 32%, var(--amber-soft), var(--amber) 70%);
+    box-shadow:0 0 8px rgba(243,176,58,.55);
+    --x0:40px; --op:.72;
+  }
+  .slide.active .sweep .p{ animation:drift 3.4s var(--ease) infinite; } /* per-particle duration/delay set inline */
   @keyframes drift{
-    0%{ opacity:0; transform:translateX(-40px) scale(.6); }
-    18%{ opacity:.95; }
-    75%{ opacity:.85; }
+    0%{ opacity:0; transform:translateX(var(--x0,-40px)) scale(.6); }
+    18%{ opacity:var(--op,.92); }
+    75%{ opacity:calc(var(--op,.92) * .88); }
     100%{ opacity:0; transform:translateX(var(--dx,320px)) scale(1); }
   }
 
@@ -293,6 +316,8 @@
     .slide .rise{ transition:opacity .3s ease; transform:none !important; }
     .bridge .link{ stroke-dashoffset:0 !important; stroke-dasharray:none !important; }
     .bridge .ai-tag{ opacity:1 !important; }
+    /* scene 5: freeze the exchange mid-flight — a static, interleaved field */
+    .sweep .p{ opacity:.5 !important; transform:translateX(var(--half,0px)) !important; }
   }
 </style>
 </head>
@@ -315,7 +340,7 @@
   <!-- 2. 아톰의 세상 -->
   <section class="slide" data-i="1" aria-label="아톰의 세상">
     <div class="glyph rise"><div class="atom" aria-hidden="true"></div></div>
-    <div class="label rise d1">창조된 세상</div>
+    <div class="label rise d1">우리가 사는 곳</div>
     <h2 class="hero med rise d2"><span class="amber">아톰</span>의 세상</h2>
     <p class="sub rise d3">물질과 몸, 그리고 공간.<br>손으로 만질 수 있는 모든 것.</p>
   </section>
@@ -325,7 +350,7 @@
     <div class="glyph rise" aria-hidden="true">
       <div class="bits" id="bitsGrid"></div>
     </div>
-    <div class="label rise d1">사람이 창조한 세상</div>
+    <div class="label rise d1">또 하나의 세상</div>
     <h2 class="hero med rise d2"><span class="cyan">비트</span>의 세상</h2>
     <p class="sub rise d3">정보와 화면, 그리고 네트워크.<br>모든 것이 <span class="cyan">0</span>과 <span class="cyan">1</span>로 흐른다.</p>
   </section>
@@ -340,6 +365,7 @@
   <section class="slide" data-i="4" aria-label="비트의 확장">
     <div class="sweep rise" id="sweep" aria-hidden="true">
       <div class="field" id="sweepField"></div>
+      <div class="bits-s"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="atom-s"></div>
     </div>
     <h2 class="lead rise d2">
@@ -356,7 +382,7 @@
       <span class="amp">&amp;</span>
       <span class="word">알고리즘</span>
     </div>
-    <p class="sub rise d3">쌓인 것과, 그것을 다루는 규칙.</p>
+    <p class="sub rise d3">쌓여 온 기록과, 그것을 다루는 규칙.</p>
   </section>
 
   <!-- 7. AI가 잇는다 -->
@@ -428,22 +454,26 @@
     }
   }
 
-  // build sweep field (scene 5) — drifting bits
+  // build sweep field (scene 5) — bits and atoms crossing both ways
   var field = document.getElementById('sweepField');
   if(field){
-    for(var s=0; s<16; s++){
+    var spawn = function(isAtom){
       var p = document.createElement('span');
-      p.className = 'p';
-      var top = Math.round(6 + Math.random()*88);
-      var left = Math.round(Math.random()*20);
-      var dx = 480 + Math.round(Math.random()*120);
-      var delay = (Math.random()*3.2).toFixed(2);
-      p.style.top = top + '%';
-      p.style.left = left + '%';
+      p.className = isAtom ? 'p atom-p' : 'p';
+      var dist = 450 + Math.round(Math.random()*140);
+      var dx = isAtom ? -dist : dist;
+      // atoms start by the amber circle, bits start by the bit cluster
+      var left = isAtom ? (76 + Math.random()*20) : (Math.random()*20);
+      p.style.top = Math.round(8 + Math.random()*80) + '%';
+      p.style.left = Math.round(left) + '%';
       p.style.setProperty('--dx', dx + 'px');
-      p.style.animationDelay = delay + 's';
+      p.style.setProperty('--half', Math.round(dx/2) + 'px'); // reduced-motion resting spot
+      p.style.animationDelay = (Math.random()*3.4).toFixed(2) + 's';
+      p.style.animationDuration = (isAtom ? 3.7 + Math.random()*.9 : 3.1 + Math.random()*.8).toFixed(2) + 's';
       field.appendChild(p);
-    }
+    };
+    for(var s=0; s<12; s++){ spawn(false); }
+    for(var a=0; a<10; a++){ spawn(true); }
   }
 
   function render(){
