@@ -1,0 +1,585 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>아톰의 세상과 비트의 세상 — 데이터로 시작하는 AI 수업</title>
+<style>
+  :root{
+    --bg0:#02040a;
+    --bg1:#0a1226;
+    --ink:#f4f7ff;
+    --sub:#9fb2d8;
+    --amber:#ffb454;
+    --gold:#ffd27a;
+    --cyan:#57e6ff;
+    --blue:#4d8dff;
+    --accent:#7cf0d0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;width:100%;overflow:hidden;background:#02040a}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    position:fixed;inset:0;
+    user-select:none;
+    cursor:pointer;
+  }
+
+  /* background gradient wash that subtly shifts per slide */
+  #wash{
+    position:fixed;inset:0;z-index:0;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #16224a 0%, rgba(10,18,38,0) 55%),
+      radial-gradient(100% 120% at 50% 120%, #060a18 0%, #02040a 60%),
+      linear-gradient(180deg,#050a18 0%, #02040a 100%);
+    transition:filter 1.2s ease, background 1.2s ease;
+  }
+
+  #field{position:fixed;inset:0;z-index:1;display:block}
+
+  /* readability veil behind text */
+  #veil{
+    position:fixed;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(75% 65% at 50% 50%, rgba(3,6,14,0.62) 0%, rgba(3,6,14,0.25) 55%, rgba(3,6,14,0) 78%);
+  }
+
+  #stage{position:fixed;inset:0;z-index:3;display:flex;align-items:center;justify-content:center}
+
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:6vmin 8vw;
+    opacity:0;visibility:hidden;
+    transform:translateY(26px) scale(0.995);
+    transition:opacity .8s cubic-bezier(.22,.61,.36,1), transform .9s cubic-bezier(.22,.61,.36,1), visibility .8s;
+    pointer-events:none;
+  }
+  .slide.active{opacity:1;visibility:visible;transform:none;pointer-events:auto}
+  .slide.prev{transform:translateY(-26px) scale(0.995)}
+
+  .kicker{
+    font-size:clamp(12px,1.7vw,20px);
+    letter-spacing:.42em;
+    text-transform:uppercase;
+    color:var(--sub);
+    font-weight:600;
+    margin-bottom:clamp(18px,3.4vh,42px);
+    opacity:.9;
+  }
+  .lead{
+    font-size:clamp(15px,2vw,24px);
+    color:var(--sub);
+    letter-spacing:.02em;
+    margin-bottom:clamp(14px,2.6vh,30px);
+    font-weight:500;
+  }
+  h1{
+    font-weight:800;
+    line-height:1.02;
+    letter-spacing:-0.02em;
+    font-size:clamp(40px,9vw,132px);
+  }
+  h2{
+    font-weight:800;
+    line-height:1.06;
+    letter-spacing:-0.02em;
+    font-size:clamp(34px,7.4vw,104px);
+  }
+  .big{
+    font-weight:800;
+    line-height:1.05;
+    letter-spacing:-0.02em;
+    font-size:clamp(30px,6.6vw,96px);
+  }
+  .sub{
+    margin-top:clamp(20px,3.6vh,42px);
+    font-size:clamp(16px,2.5vw,32px);
+    color:var(--sub);
+    font-weight:500;
+    letter-spacing:.01em;
+    max-width:20ch;
+  }
+  .note{
+    margin-top:clamp(16px,2.4vh,28px);
+    font-size:clamp(14px,1.8vw,22px);
+    color:var(--sub);
+    font-weight:400;
+    max-width:34ch;
+    line-height:1.5;
+    opacity:.85;
+  }
+
+  .warm{color:var(--gold)}
+  .cool{color:var(--cyan)}
+  .ai{color:var(--accent)}
+  .glow-warm{text-shadow:0 0 42px rgba(255,180,84,.35), 0 0 12px rgba(255,180,84,.25)}
+  .glow-cool{text-shadow:0 0 46px rgba(87,230,255,.4), 0 0 14px rgba(87,230,255,.3)}
+  .glow-ai{text-shadow:0 0 50px rgba(124,240,208,.45), 0 0 16px rgba(124,240,208,.3)}
+
+  /* animated words reveal */
+  .slide.active .reveal{animation:rise .9s both cubic-bezier(.2,.7,.2,1)}
+  .slide.active .reveal.d1{animation-delay:.08s}
+  .slide.active .reveal.d2{animation-delay:.22s}
+  .slide.active .reveal.d3{animation-delay:.38s}
+  .slide.active .reveal.d4{animation-delay:.54s}
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+  /* the atom→bit pair display on some slides */
+  .pair{display:flex;gap:clamp(10px,4vw,64px);align-items:center;justify-content:center;flex-wrap:wrap;margin-top:clamp(8px,2vh,24px)}
+  .pair .side{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .pair .glyph{font-size:clamp(30px,6vw,72px);font-weight:800}
+  .pair .cap{font-size:clamp(13px,1.7vw,20px);color:var(--sub);letter-spacing:.04em}
+  .arrow{font-size:clamp(24px,4vw,52px);color:var(--sub);opacity:.7}
+
+  /* the three data words */
+  .flow{display:flex;gap:clamp(10px,3vw,40px);align-items:center;justify-content:center;flex-wrap:wrap;margin-top:clamp(24px,4vh,48px)}
+  .chip{
+    font-size:clamp(22px,4.4vw,60px);
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  .plus{font-size:clamp(20px,3vw,40px);color:var(--sub);opacity:.6;font-weight:400}
+
+  /* start button */
+  .cta{
+    margin-top:clamp(30px,5vh,56px);
+    display:inline-flex;align-items:center;gap:.7em;
+    font-size:clamp(17px,2.4vw,26px);
+    font-weight:700;
+    letter-spacing:.01em;
+    color:#04121a;
+    background:linear-gradient(135deg,var(--accent),var(--cyan));
+    padding:clamp(14px,2vh,20px) clamp(26px,4vw,46px);
+    border-radius:999px;
+    text-decoration:none;
+    box-shadow:0 10px 40px rgba(87,230,255,.28), 0 0 0 1px rgba(255,255,255,.14) inset;
+    transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s;
+    pointer-events:auto;
+  }
+  .cta:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 16px 54px rgba(87,230,255,.42), 0 0 0 1px rgba(255,255,255,.2) inset}
+  .cta .a{transition:transform .3s}
+  .cta:hover .a{transform:translateX(4px)}
+
+  /* progress dots */
+  #dots{
+    position:fixed;left:0;right:0;bottom:clamp(20px,4.2vh,40px);z-index:5;
+    display:flex;gap:12px;align-items:center;justify-content:center;
+  }
+  #dots button{
+    width:9px;height:9px;border-radius:50%;border:0;padding:0;cursor:pointer;
+    background:rgba(180,200,240,.28);
+    transition:transform .3s, background .3s, width .3s, border-radius .3s;
+  }
+  #dots button.on{background:var(--accent);width:26px;border-radius:6px;box-shadow:0 0 14px rgba(124,240,208,.6)}
+  #dots button:hover{background:rgba(180,200,240,.6)}
+
+  /* nav hint */
+  #hint{
+    position:fixed;right:clamp(16px,3vw,34px);bottom:clamp(18px,4vh,38px);z-index:5;
+    color:var(--sub);font-size:clamp(11px,1.3vw,14px);letter-spacing:.06em;
+    opacity:.5;pointer-events:none;transition:opacity .6s;
+  }
+  #hint.hide{opacity:0}
+  kbd{
+    font-family:inherit;font-size:.92em;
+    border:1px solid rgba(159,178,216,.4);border-radius:5px;
+    padding:1px 7px;margin:0 1px;color:var(--ink);opacity:.85;
+  }
+
+  /* counter */
+  #counter{
+    position:fixed;left:clamp(18px,3vw,34px);bottom:clamp(20px,4vh,38px);z-index:5;
+    color:var(--sub);font-size:clamp(12px,1.4vw,16px);letter-spacing:.14em;
+    opacity:.6;font-variant-numeric:tabular-nums;
+  }
+
+  @media (max-width:600px){
+    .kicker{letter-spacing:.3em}
+    .sub{max-width:24ch}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .slide{transition:opacity .3s ease}
+    .slide.active .reveal{animation:none}
+    .cta{transition:none}
+  }
+</style>
+
+<div id="wash"></div>
+<canvas id="field" aria-hidden="true"></canvas>
+<div id="veil"></div>
+
+<main id="stage">
+
+  <!-- 1 · COVER -->
+  <section class="slide" data-mode="cover" aria-label="표지">
+    <p class="kicker reveal d1">교사 워크샵</p>
+    <h1 class="reveal d2"><span class="warm glow-warm">아톰</span>의 세상과<br><span class="cool glow-cool">비트</span>의 세상</h1>
+    <p class="sub reveal d4">데이터로 시작하는 AI 수업</p>
+  </section>
+
+  <!-- 2 · ATOM WORLD -->
+  <section class="slide" data-mode="atom" aria-label="아톰의 세상">
+    <p class="kicker reveal d1">우리가 사는 곳</p>
+    <h2 class="reveal d2"><span class="warm glow-warm">아톰</span>의 세상</h2>
+    <p class="note reveal d3">물질과 몸, 그리고 공간.<br>손으로 만질 수 있는 모든 것.</p>
+  </section>
+
+  <!-- 3 · BIT WORLD -->
+  <section class="slide" data-mode="bit" aria-label="비트의 세상">
+    <p class="kicker reveal d1">또 하나의 세상</p>
+    <h2 class="reveal d2"><span class="cool glow-cool">비트</span>의 세상</h2>
+    <p class="note reveal d3">정보와 화면, 그리고 네트워크.<br>모든 것이 <span class="cool">0</span>과 <span class="cool">1</span>로.</p>
+  </section>
+
+  <!-- 4 · QUESTION -->
+  <section class="slide" data-mode="question" aria-label="질문">
+    <p class="lead reveal d1">잠깐, 상상해 봅시다</p>
+    <h2 class="big reveal d2">10년 후를<br>예측한다면?</h2>
+  </section>
+
+  <!-- 5 · BIT EXPANDS -->
+  <section class="slide" data-mode="expand" aria-label="비트의 확장">
+    <p class="kicker reveal d1">분명한 흐름</p>
+    <h2 class="big reveal d2"><span class="cool glow-cool">비트</span>의 세상은 더 넓어지고,<br><span class="warm glow-warm">아톰</span>의 세상에<br>더 큰 영향을 끼칠 것이다</h2>
+  </section>
+
+  <!-- 6 · DATA + ALGORITHM -->
+  <section class="slide" data-mode="data" aria-label="데이터와 알고리즘">
+    <p class="kicker reveal d1">비트의 세상을 이루는 건</p>
+    <div class="flow reveal d2">
+      <span class="chip cool glow-cool">데이터</span>
+      <span class="plus">+</span>
+      <span class="chip cool glow-cool">알고리즘</span>
+    </div>
+    <p class="note reveal d3">쌓인 데이터를, 알고리즘이 규칙으로 바꾼다.</p>
+  </section>
+
+  <!-- 7 · AI BRIDGE -->
+  <section class="slide" data-mode="ai" aria-label="AI">
+    <p class="kicker reveal d1">아톰과 비트를 잇는 건</p>
+    <h1 class="reveal d2"><span class="ai glow-ai">AI</span></h1>
+    <p class="note reveal d3">두 세상을 연결하는 다리.</p>
+  </section>
+
+  <!-- 8 · FINALE -->
+  <section class="slide" data-mode="finale" aria-label="마무리">
+    <p class="kicker reveal d1">그래서 오늘, 우리는</p>
+    <h2 class="big reveal d2"><span class="cool glow-cool">데이터</span>로<br>시작한다</h2>
+    <a class="cta reveal d3" href="https://greatsong.github.io/workshop/" target="_top">
+      워크샵 시작하기 <span class="a">→</span>
+    </a>
+  </section>
+
+</main>
+
+<nav id="dots" aria-label="슬라이드 이동"></nav>
+<div id="counter"><span id="cur">01</span> <span style="opacity:.5">/</span> <span id="tot">08</span></div>
+<div id="hint"><kbd>→</kbd> <kbd>Space</kbd> 다음 &nbsp; <kbd>←</kbd> 이전</div>
+
+<script>
+(function(){
+  "use strict";
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- slide navigation ---------- */
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var N = slides.length;
+  var idx = 0;
+  var dotsWrap = document.getElementById("dots");
+  var curEl = document.getElementById("cur");
+  var hint = document.getElementById("hint");
+
+  var dots = slides.map(function(s, i){
+    var b = document.createElement("button");
+    b.setAttribute("aria-label", "슬라이드 " + (i+1));
+    b.addEventListener("click", function(e){ e.stopPropagation(); go(i); });
+    dotsWrap.appendChild(b);
+    return b;
+  });
+
+  function render(){
+    slides.forEach(function(s, i){
+      s.classList.toggle("active", i === idx);
+      s.classList.toggle("prev", i < idx);
+    });
+    dots.forEach(function(d, i){ d.classList.toggle("on", i === idx); });
+    curEl.textContent = ("0" + (idx+1)).slice(-2);
+    field.setTarget(slides[idx].dataset.mode);
+  }
+  function go(i){
+    i = Math.max(0, Math.min(N-1, i));
+    if (i === idx) return;
+    idx = i; render();
+  }
+  function next(){ if (idx < N-1) go(idx+1); }
+  function prev(){ if (idx > 0) go(idx-1); }
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "ArrowRight" || e.key === " " || e.key === "Spacebar" || e.key === "PageDown"){ e.preventDefault(); next(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); prev(); }
+    else if (e.key === "Home"){ e.preventDefault(); go(0); }
+    else if (e.key === "End"){ e.preventDefault(); go(N-1); }
+    hideHint();
+  });
+
+  // click anywhere = next; but don't hijack links / dots
+  document.addEventListener("click", function(e){
+    if (e.target.closest("a") || e.target.closest("#dots")) return;
+    next(); hideHint();
+  });
+
+  // touch swipe
+  var tx=0, ty=0;
+  document.addEventListener("touchstart", function(e){ tx=e.changedTouches[0].clientX; ty=e.changedTouches[0].clientY; }, {passive:true});
+  document.addEventListener("touchend", function(e){
+    var dx=e.changedTouches[0].clientX - tx, dy=e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy)){ dx < 0 ? next() : prev(); }
+  }, {passive:true});
+
+  var hintTimer = setTimeout(hideHint, 6000);
+  function hideHint(){ hint.classList.add("hide"); clearTimeout(hintTimer); }
+
+  /* ---------- particle field ---------- */
+  var canvas = document.getElementById("field");
+  var ctx = canvas.getContext("2d");
+  var W=0, H=0, DPR=1;
+  var particles = [];
+  var glyphs = ["0","1"];
+
+  // per-mode global params. warmth 0=amber .. 1=cyan ; energy=motion ; link=draw connections
+  var MODES = {
+    cover:    { warmth:0.45, spread:1.0,  energy:0.55, bitRatio:0.4,  link:0.15, hue:"mix"  },
+    atom:     { warmth:0.06, spread:0.92, energy:0.42, bitRatio:0.08, link:0.0,  hue:"warm" },
+    bit:      { warmth:0.94, spread:1.05, energy:0.7,  bitRatio:0.9,  link:0.05, hue:"cool" },
+    question: { warmth:0.5,  spread:1.25, energy:0.3,  bitRatio:0.5,  link:0.0,  hue:"mix"  },
+    expand:   { warmth:0.78, spread:1.35, energy:0.85, bitRatio:0.78, link:0.1,  hue:"cool" },
+    data:     { warmth:0.88, spread:1.0,  energy:0.95, bitRatio:0.85, link:0.0,  hue:"cool", stream:true },
+    ai:       { warmth:0.5,  spread:0.85, energy:0.5,  bitRatio:0.5,  link:1.0,  hue:"mix"  },
+    finale:   { warmth:0.7,  spread:0.75, energy:0.4,  bitRatio:0.7,  link:0.25, hue:"cool", converge:true }
+  };
+  var cur = clone(MODES.cover);   // animated current params
+  var tgt = clone(MODES.cover);   // target params
+  function clone(o){ var r={}; for(var k in o) r[k]=o[k]; return r; }
+
+  var field = {
+    setTarget: function(mode){
+      var m = MODES[mode] || MODES.cover;
+      for (var k in m){ tgt[k] = m[k]; }
+      // re-roll each particle's bit identity gradually toward bitRatio
+      particles.forEach(function(p){ p.wantBit = Math.random() < m.bitRatio; });
+    }
+  };
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    buildParticles();
+  }
+
+  function buildParticles(){
+    // count proportional to area, capped for performance
+    var area = W * H;
+    var target = Math.round(area / 10500);
+    target = Math.max(60, Math.min(REDUCED ? 120 : 200, target));
+    if (particles.length === target) return;
+    particles = [];
+    for (var i=0;i<target;i++){
+      particles.push(makeParticle(true));
+    }
+  }
+
+  function makeParticle(scatter){
+    var p = {
+      x: Math.random()*W,
+      y: Math.random()*H,
+      // drift velocity
+      vx: (Math.random()-0.5)*0.35,
+      vy: (Math.random()-0.5)*0.35,
+      r: 1.2 + Math.random()*2.6,
+      base: Math.random(),              // personal warmth bias
+      wantBit: Math.random() < 0.5,
+      isBit: Math.random() < 0.5,
+      morph: Math.random(),             // 0=atom shape .. 1=bit shape
+      glyph: glyphs[(Math.random()*2)|0],
+      tw: Math.random()*Math.PI*2,      // twinkle phase
+      tws: 0.6 + Math.random()*1.4,     // twinkle speed
+      spin: (Math.random()-0.5)*0.02,
+      ang: Math.random()*Math.PI*2,
+      seed: Math.random()*1000,
+      depth: 0.4 + Math.random()*0.6    // parallax/size factor
+    };
+    return p;
+  }
+
+  // color helper: blend warm(amber) -> cool(cyan) by t
+  function particleColor(t, a){
+    // warm: 255,180,84  |  cool: 87,230,255
+    var r = Math.round(255 + (87-255)*t);
+    var g = Math.round(180 + (230-180)*t);
+    var b = Math.round(84 + (255-84)*t);
+    return "rgba("+r+","+g+","+b+","+a+")";
+  }
+
+  var lastT = 0;
+  function frame(ts){
+    var dt = Math.min(40, ts - lastT || 16) / 16.67;
+    lastT = ts;
+
+    // ease current params toward target
+    for (var k in tgt){
+      if (typeof tgt[k] === "number"){
+        cur[k] += (tgt[k]-cur[k]) * 0.045 * dt;
+      } else {
+        cur[k] = tgt[k];
+      }
+    }
+
+    ctx.clearRect(0,0,W,H);
+
+    var cx = W/2, cy = H/2;
+    var energy = REDUCED ? 0.0 : cur.energy;
+    var timeScale = REDUCED ? 0 : 1;
+
+    // update + draw particles
+    for (var i=0;i<particles.length;i++){
+      var p = particles[i];
+
+      // morph toward bit if wanted
+      var targetMorph = p.wantBit ? 1 : 0;
+      p.morph += (targetMorph - p.morph) * 0.03 * dt;
+
+      // motion
+      if (!REDUCED){
+        if (cur.stream > 0.5 || cur.stream === true){
+          // streaming flow to the right-ish, like data current
+          p.vx += 0.01*dt;
+          p.vy += Math.sin((ts*0.0006)+p.seed)*0.006*dt;
+        }
+        if (cur.converge){
+          // gentle pull to center
+          p.vx += (cx - p.x) * 0.00012 * dt;
+          p.vy += (cy - p.y) * 0.00012 * dt;
+        }
+        // organic drift
+        p.vx += Math.cos(ts*0.0003 + p.seed)*0.004*energy*dt;
+        p.vy += Math.sin(ts*0.00035 + p.seed*1.3)*0.004*energy*dt;
+
+        p.x += p.vx * (0.5 + energy) * dt;
+        p.y += p.vy * (0.5 + energy) * dt;
+        p.vx *= 0.985; p.vy *= 0.985;
+        p.ang += p.spin*dt;
+        p.tw += 0.03*p.tws*dt;
+      }
+
+      // wrap around edges (with spread margin)
+      var mg = 40 * cur.spread;
+      if (p.x < -mg) p.x = W+mg; else if (p.x > W+mg) p.x = -mg;
+      if (p.y < -mg) p.y = H+mg; else if (p.y > H+mg) p.y = -mg;
+
+      // color warmth: blend personal bias with global warmth, biased by morph
+      var t = cur.warmth*0.55 + p.morph*0.35 + (p.base-0.5)*0.2;
+      t = Math.max(0, Math.min(1, t));
+
+      var twinkle = REDUCED ? 0.8 : (0.6 + 0.4*Math.sin(p.tw));
+      var size = p.r * p.depth * (1 + cur.spread*0.15);
+
+      draw(p, t, twinkle, size);
+    }
+
+    // connection lines (AI bridge / links)
+    if (cur.link > 0.06 && !REDUCED){
+      drawLinks();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  function draw(p, t, tw, size){
+    var bitAmt = p.morph;      // how "bit-like"
+    var atomAmt = 1 - bitAmt;
+
+    // atom part: soft glowing circle (warm)
+    if (atomAmt > 0.05){
+      var a = (0.5 + tw*0.45) * atomAmt;
+      var rr = size * (1 + atomAmt*0.4);
+      var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr*3.2);
+      var col = particleColor(t, a);
+      g.addColorStop(0, particleColor(t, a*0.9));
+      g.addColorStop(0.4, particleColor(t, a*0.35));
+      g.addColorStop(1, particleColor(t, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rr*3.2, 0, Math.PI*2);
+      ctx.fill();
+      // bright core
+      ctx.fillStyle = particleColor(Math.min(1,t+0.1), a);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rr*0.7, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // bit part: 0/1 glyph or tiny square (cool)
+    if (bitAmt > 0.15){
+      var ab = (0.4 + tw*0.5) * bitAmt;
+      var fs = Math.max(8, size*4.2);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.font = "700 " + fs.toFixed(1) + "px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = particleColor(Math.max(t,0.7), ab*0.9);
+      ctx.shadowBlur = fs*0.9;
+      ctx.fillStyle = particleColor(Math.max(t,0.75), ab);
+      ctx.fillText(p.glyph, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  function drawLinks(){
+    var maxD = Math.min(W,H) * 0.16;
+    var maxD2 = maxD*maxD;
+    var strength = cur.link;
+    // limit pairs for perf: only check a window
+    var n = particles.length;
+    for (var i=0;i<n;i++){
+      var a = particles[i];
+      // link warm(atom-ish) to cool(bit-ish) neighbors -> the "AI bridge"
+      for (var j=i+1;j<n;j++){
+        var b = particles[j];
+        var dx = a.x-b.x, dy = a.y-b.y;
+        var d2 = dx*dx+dy*dy;
+        if (d2 > maxD2) continue;
+        // favor connecting opposite types
+        var opp = Math.abs(a.morph - b.morph);
+        var d = Math.sqrt(d2);
+        var alpha = (1 - d/maxD) * strength * (0.25 + opp*0.55) * 0.6;
+        if (alpha < 0.015) continue;
+        var mt = (a.morph + b.morph)/2;
+        var grd = ctx.createLinearGradient(a.x,a.y,b.x,b.y);
+        grd.addColorStop(0, particleColor(Math.min(1,cur.warmth*0.4+a.morph*0.5), alpha));
+        grd.addColorStop(0.5, "rgba(124,240,208,"+(alpha*1.1)+")");
+        grd.addColorStop(1, particleColor(Math.min(1,cur.warmth*0.4+b.morph*0.5), alpha));
+        ctx.strokeStyle = grd;
+        ctx.lineWidth = 0.8 + alpha*1.4;
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  window.addEventListener("resize", debounce(resize, 160));
+  resize();
+  render();
+  requestAnimationFrame(frame);
+
+  function debounce(fn, ms){ var tmr; return function(){ clearTimeout(tmr); tmr=setTimeout(fn, ms); }; }
+})();
+</script>
