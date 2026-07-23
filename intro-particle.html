@@ -220,14 +220,14 @@
 
   <!-- 2 · ATOM WORLD -->
   <section class="slide" data-mode="atom" aria-label="아톰의 세상">
-    <p class="kicker reveal d1">창조된 세상</p>
+    <p class="kicker reveal d1">우리가 사는 곳</p>
     <h2 class="reveal d2"><span class="warm glow-warm">아톰</span>의 세상</h2>
     <p class="note reveal d3">물질과 몸, 그리고 공간.<br>손으로 만질 수 있는 모든 것.</p>
   </section>
 
   <!-- 3 · BIT WORLD -->
   <section class="slide" data-mode="bit" aria-label="비트의 세상">
-    <p class="kicker reveal d1">사람이 창조한 세상</p>
+    <p class="kicker reveal d1">또 하나의 세상</p>
     <h2 class="reveal d2"><span class="cool glow-cool">비트</span>의 세상</h2>
     <p class="note reveal d3">정보와 화면, 그리고 네트워크.<br>모든 것이 <span class="cool">0</span>과 <span class="cool">1</span>로.</p>
   </section>
@@ -252,7 +252,7 @@
       <span class="plus">+</span>
       <span class="chip cool glow-cool">알고리즘</span>
     </div>
-    <p class="note reveal d3">쌓인 데이터를, 알고리즘이 규칙으로 바꾼다.</p>
+    <p class="note reveal d3">쌓여 온 기록과, 그것을 다루는 규칙.</p>
   </section>
 
   <!-- 7 · AI BRIDGE -->
@@ -348,15 +348,16 @@
   var glyphs = ["0","1"];
 
   // per-mode global params. warmth 0=amber .. 1=cyan ; energy=motion ; link=draw connections
+  // exchange: 0=off .. 1=full two-way trade (bits drift toward the atom side, atoms toward the bit side)
   var MODES = {
-    cover:    { warmth:0.45, spread:1.0,  energy:0.55, bitRatio:0.4,  link:0.15, hue:"mix"  },
-    atom:     { warmth:0.06, spread:0.92, energy:0.42, bitRatio:0.08, link:0.0,  hue:"warm" },
-    bit:      { warmth:0.94, spread:1.05, energy:0.7,  bitRatio:0.9,  link:0.05, hue:"cool" },
-    question: { warmth:0.5,  spread:1.25, energy:0.3,  bitRatio:0.5,  link:0.0,  hue:"mix"  },
-    expand:   { warmth:0.78, spread:1.35, energy:0.85, bitRatio:0.78, link:0.1,  hue:"cool" },
-    data:     { warmth:0.88, spread:1.0,  energy:0.95, bitRatio:0.85, link:0.0,  hue:"cool", stream:true },
-    ai:       { warmth:0.5,  spread:0.85, energy:0.5,  bitRatio:0.5,  link:1.0,  hue:"mix"  },
-    finale:   { warmth:0.7,  spread:0.75, energy:0.4,  bitRatio:0.7,  link:0.25, hue:"cool", converge:true }
+    cover:    { warmth:0.45, spread:1.0,  energy:0.55, bitRatio:0.4,  link:0.15, exchange:0, hue:"mix"  },
+    atom:     { warmth:0.06, spread:0.92, energy:0.42, bitRatio:0.08, link:0.0,  exchange:0, hue:"warm" },
+    bit:      { warmth:0.94, spread:1.05, energy:0.7,  bitRatio:0.9,  link:0.05, exchange:0, hue:"cool" },
+    question: { warmth:0.5,  spread:1.25, energy:0.3,  bitRatio:0.5,  link:0.0,  exchange:0, hue:"mix"  },
+    expand:   { warmth:0.78, spread:1.2,  energy:0.7,  bitRatio:0.52, link:0.14, exchange:1, hue:"mix"  },
+    data:     { warmth:0.88, spread:1.0,  energy:0.95, bitRatio:0.85, link:0.0,  exchange:0, hue:"cool", stream:true },
+    ai:       { warmth:0.5,  spread:0.85, energy:0.5,  bitRatio:0.5,  link:1.0,  exchange:0, hue:"mix"  },
+    finale:   { warmth:0.7,  spread:0.75, energy:0.4,  bitRatio:0.7,  link:0.25, exchange:0, hue:"cool", converge:true }
   };
   var cur = clone(MODES.cover);   // animated current params
   var tgt = clone(MODES.cover);   // target params
@@ -454,8 +455,18 @@
       var targetMorph = p.wantBit ? 1 : 0;
       p.morph += (targetMorph - p.morph) * 0.03 * dt;
 
+      // two-way exchange: bits flow one way, atoms flow the other, crossing mid-screen
+      var ex = Math.max(0, Math.min(1, cur.exchange || 0));
+
       // motion
       if (!REDUCED){
+        if (ex > 0.02){
+          // wantBit is the stable identity (morph is still easing right after a slide change)
+          var dir = p.wantBit ? -1 : 1;              // bits: right->left, atoms: left->right
+          var lane = Math.sin(ts*0.00045 + p.seed*0.9);
+          p.vx += dir * 0.028 * ex * (0.7 + p.depth*0.6) * dt;
+          p.vy += (dir * 0.22 + lane*0.5) * 0.008 * ex * dt;   // gentle counter-diagonal + sway
+        }
         if (cur.stream > 0.5 || cur.stream === true){
           // streaming flow to the right-ish, like data current
           p.vx += 0.01*dt;
@@ -484,9 +495,23 @@
 
       // color warmth: blend personal bias with global warmth, biased by morph
       var t = cur.warmth*0.55 + p.morph*0.35 + (p.base-0.5)*0.2;
+      if (ex > 0.02){
+        // polarize so the two flows read as amber (atom) vs cyan (bit)
+        var tp = 0.08 + p.morph*0.86 + (p.base-0.5)*0.08;
+        t = t + (tp - t) * ex;
+      }
       t = Math.max(0, Math.min(1, t));
 
       var twinkle = REDUCED ? 0.8 : (0.6 + 0.4*Math.sin(p.tw));
+      if (ex > 0.02){
+        // keep the headline legible; let the crossing sparkle above/below it
+        var nx = 1 - Math.min(1, Math.abs(p.x - cx) / (W*0.36));   // 1 = center column
+        var ny = 1 - Math.min(1, Math.abs(p.y - cy) / (H*0.30));   // 1 = center row
+        var textZone = nx * ny;
+        var crossZone = nx * (1 - ny);
+        twinkle *= (1 - ex*textZone*0.62);
+        twinkle *= (1 + ex*crossZone*0.40);
+      }
       var size = p.r * p.depth * (1 + cur.spread*0.15);
 
       draw(p, t, twinkle, size);
