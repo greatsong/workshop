@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터로 시작하는 AI 수업 · 워크샵</title>
+<style>
+  :root{ --gold:#F4B400; --accent:#E8930C; --bg:#FFFDF7; --card:#FFF6E0; --card2:#FFFCF3;
+    --border:#F0E2BC; --text:#3A2E1A; --muted:#8A7A58; --shadow:rgba(180,140,20,.16); }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);line-height:1.65;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px;}
+  a{color:inherit;}
+  /* HERO */
+  .hero{text-align:center;padding:64px 20px 40px;
+    background:radial-gradient(700px 380px at 50% -10%,#FFF7DE,transparent);}
+  .hero .tag{display:inline-block;background:var(--card);border:1px solid var(--border);color:var(--accent);
+    font-weight:800;font-size:.82rem;padding:5px 14px;border-radius:99px;letter-spacing:.3px;}
+  .hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.04em;margin:18px 0 6px;}
+  .hero h1 .a{color:var(--accent);}
+  .hero .sub{color:var(--muted);font-size:1.1rem;margin-bottom:8px;}
+  .section{padding:44px 0;border-top:1px solid var(--border);}
+  .step{display:inline-block;background:var(--accent);color:#fff;font-weight:800;font-size:.78rem;
+    padding:4px 12px;border-radius:99px;letter-spacing:.4px;}
+  h2{font-size:clamp(1.4rem,3.4vw,2rem);font-weight:800;letter-spacing:-.02em;margin:12px 0 6px;}
+  .lead{color:var(--muted);font-size:1.02rem;margin:0 0 20px;}
+  .quote{background:linear-gradient(180deg,#FFFBEF,var(--card));border:1.5px solid var(--gold);
+    border-radius:20px;padding:26px 28px;box-shadow:0 10px 30px var(--shadow);font-size:1.18rem;font-weight:700;text-align:center;}
+  .quote b{color:var(--accent);}
+  .quote .small{display:block;color:var(--muted);font-weight:600;font-size:.95rem;margin-top:10px;}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 20px;}
+  .q{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:15px 17px;box-shadow:0 1px 4px var(--shadow);}
+  .q .qq{font-weight:800;}
+  .q .aa{color:var(--accent);font-weight:800;font-size:.9rem;margin-top:5px;}
+  .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:1rem;
+    padding:14px 22px;border-radius:14px;background:var(--accent);color:#fff;box-shadow:0 6px 18px var(--shadow);}
+  .btn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--gold);box-shadow:none;}
+  .btn:hover{filter:brightness(1.05);}
+  .api{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .api .c{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+  .api .c h4{margin:0 0 4px;font-size:1rem;} .api .c p{margin:0;color:var(--muted);font-size:.92rem;}
+  .lab{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
+  .labcard{display:block;text-decoration:none;background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:22px;box-shadow:0 4px 16px var(--shadow);transition:transform .12s;}
+  .labcard:hover{transform:translateY(-3px);}
+  .labcard .e{font-size:34px;} .labcard h3{margin:8px 0 4px;font-size:1.2rem;}
+  .labcard p{margin:0;color:var(--muted);font-size:.92rem;}
+  .labcard .go{margin-top:10px;color:var(--accent);font-weight:800;font-size:.9rem;}
+  .foot{padding:40px 0 60px;color:var(--muted);font-size:.86rem;text-align:center;border-top:1px solid var(--border);}
+  @media(max-width:600px){.qgrid,.api,.lab{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <span class="tag">교사의 데이터 상상력을 깨우는 마중물</span>
+    <h1>AI의 시대,<br>그래도 여전히 <span class="a">데이터</span></h1>
+    <p class="sub">데이터를 읽고 상상하는 교사가, 수업을 바꿉니다.</p>
+  </div>
+</div>
+
+<!-- 0. 지금 시작: 오프닝(폰) -->
+<div style="text-align:center;padding:6px 20px 0;"><div class="wrap">
+  <a class="btn" href="https://greatsong.github.io/map/" style="font-size:1.05rem;">🚀 지금 바로 시작 — 폰으로 우리 학교를 지도에 올려요 →</a>
+  <p style="color:var(--muted);font-size:.9rem;margin-top:8px;">앞 화면 <b>QR</b>을 스캔하거나 <b>greatsong.github.io/map</b> 접속</p>
+</div></div>
+
+<!-- 1. 인트로 메시지 -->
+<div class="section"><div class="wrap">
+  <span class="step">INTRO · 왜 데이터인가</span>
+  <h2>AI는 '열매'를 다루는 기술입니다</h2>
+  <p class="lead">번역·요약·그림·코드… 화려한 열매는 AI가 맺어줍니다. 그런데 그 열매를 맺게 하는 <b>뿌리</b>는 무엇일까요?</p>
+  <div class="quote">
+    🌳 AI가 <b>열매</b>라면, 그 뿌리는 <b>데이터</b>입니다.
+    <span class="small">데이터를 읽고 상상할 줄 아는 교사가, AI 시대에 수업을 바꿉니다.</span>
+  </div>
+  <p class="lead" style="margin-top:22px">교실은 이미 <b>데이터로 가득</b>합니다 — 성적, 출결, 설문, 활동 기록, 아이들의 관심사까지. 이 데이터를 <b>질문으로 바꾸고 눈에 보이게</b> 만들 때, 수업은 달라집니다. 문제는 방법을 <b>상상해 본 적이 없다</b>는 것뿐이죠.</p>
+  <p class="lead">그래서 오늘은 <b>거창한 코딩이 아니라 데이터 상상력</b>을 깨웁니다. 공공데이터로 함께 감을 잡는 이 시간은 <b>첫 마중물</b>이에요. 오늘 이후엔 <b>여러분의 수업 데이터로</b> 직접 수업을 상상하고, 만들어 보시길 바랍니다.</p>
+  <div class="btns"><a class="btn ghost" href="curriculum.html">📗 이 수업과 2022 개정 교육과정 — 성취기준 연결 보기 →</a></div>
+</div></div>
+
+<!-- 2. 질문으로 시작 -->
+<div class="section"><div class="wrap">
+  <span class="step">HOOK · 질문으로 시작</span>
+  <h2>데이터는 이런 질문에 답합니다</h2>
+  <p class="lead">아래 질문들, 감으로 답하지 말고 <b>데이터로</b> 확인해 볼까요?</p>
+  <div class="qgrid">
+    <div class="q"><div class="qq">우리 학교 동네엔 몇 살이 많을까?</div><div class="aa">→ 인구 피라미드로 한눈에</div></div>
+    <div class="q"><div class="qq">청소년이 유독 많다면… 학군지?</div><div class="aa">→ 만 14세 비율로 확인</div></div>
+    <div class="q"><div class="qq">전국에서 만 14세가 제일 많은 동네는?</div><div class="aa">→ 예상과 맞을까요? 데모에서 확인 👀</div></div>
+    <div class="q"><div class="qq">인구 구조가 '쌍둥이'인 동네끼리 공통점은?</div><div class="aa">→ 직접 찾으면 무릎을 칩니다 😲</div></div>
+  </div>
+  <p class="lead">감으로 답하지 말고 <b>직접 데이터로</b> 확인해 보세요. 발견한 <b>인사이트</b>를 함께 나눠요!</p>
+  <div class="btns">
+    <a class="btn" href="https://greatsong.github.io/map/insight.html">🔎 인구 인사이트 데모 열기</a>
+    <a class="btn ghost" href="https://greatsong.github.io/map/board.html">🗺️ 전국 선생님 지도(오프닝)</a>
+  </div>
+</div></div>
+
+<!-- 3. API 소개 -->
+<div class="section"><div class="wrap">
+  <span class="step">API · 데이터를 받아오는 곳</span>
+  <h2>'API'라는 창구가 있습니다</h2>
+  <p class="lead">API는 데이터나 기능을 <b>받아올 수 있는 창구</b>예요. 우리가 직접 모으지 않아도, 이미 만들어진 데이터를 불러다 쓸 수 있습니다.</p>
+  <div class="api">
+    <div class="c"><h4>🆓 무료 API</h4><p>공공데이터포털, 나이스(NEIS) 급식·학교 정보 등. 인증키가 없어도 되는 것도 많아요.</p></div>
+    <div class="c"><h4>💳 유료 API</h4><p>지도·결제·고성능 AI 등. 트래픽/기능에 따라 요금이 붙습니다.</p></div>
+  </div>
+  <p class="lead" style="margin-top:16px">오늘 실습은 <b>공공 인구 데이터</b>로 감을 잡고, 학교로 돌아가 만들 <b>급식 앱</b>은 바로 이 <b>NEIS API</b>로 우리 학교의 오늘 급식을 인증키 없이 불러옵니다.</p>
+</div></div>
+
+<!-- 4. 오늘의 실습: 인구 -->
+<div class="section"><div class="wrap">
+  <span class="step">오늘의 실습 · 함께 만들기</span>
+  <h2>오늘은 '우리 동네 인구'를 만듭니다</h2>
+  <p class="lead">공공 인구 데이터로 인구 피라미드·대시보드를 직접 만들어 인터넷에 배포해요. 말로 설명하면 AI가 만들어 줍니다. 50분이면 충분합니다.</p>
+  <div class="lab" style="grid-template-columns:1fr">
+    <a class="labcard" href="https://greatsong.github.io/ingu/">
+      <div class="e">🏘️</div><h3>우리 동네 인구 분석 앱 <span style="font-size:.7rem;color:#fff;background:var(--accent);padding:2px 9px;border-radius:99px;vertical-align:middle">오늘의 실습</span></h3>
+      <p>지역을 검색해 인구 구조·고령화·유소년 비율을 한눈에. 배포 → 데이터 → 시각화 → 대시보드.</p>
+      <div class="go">오늘의 실습 시작하기 →</div>
+    </a>
+  </div>
+</div></div>
+
+<!-- 5. 다음 미션: 급식(학교에서) -->
+<div class="section" style="background:linear-gradient(180deg,#F3FBF4,transparent);"><div class="wrap">
+  <span class="step" style="background:#2E9E5B">집에 가서 · 다음 미션</span>
+  <h2>이번엔 '우리 학교'로 — 꼭 만들어 보세요</h2>
+  <p class="lead">오늘 감을 잡았다면, 학교로 돌아가 <b>우리 학교의 오늘 급식</b>으로 똑같이 만들어 보세요. 공공데이터에서 <b>내 학교·내 수업의 데이터</b>로 넘어가는 첫걸음입니다. 오늘의 마중물이 진짜 물길이 되는 순간이죠.</p>
+  <div class="lab">
+    <a class="labcard" href="https://greatsong.github.io/meal/">
+      <div class="e">🍚</div><h3>우리 학교 급식 투표 앱</h3>
+      <p>NEIS API로 우리 학교 오늘 급식을 불러와 메뉴 투표. 학교에서 직접 만들어 보는 미션.</p>
+      <div class="go">학교에서 만들기 →</div>
+    </a>
+    <a class="labcard" href="https://greatsong.github.io/meal-db/">
+      <div class="e">🌐</div><h3>+ 온라인 협동 모드</h3>
+      <p>구글 시트로 모두의 표를 모아 실시간 집계·분석까지. 급식 앱을 만든 뒤 심화로.</p>
+      <div class="go">심화 도전 →</div>
+    </a>
+  </div>
+</div></div>
+
+<div class="foot"><div class="wrap">
+  당곡고 교사 석리송(greatsong21@gmail.com)</div></div>
+
+<script>document.querySelectorAll('a[href^="http"]').forEach(a=>{a.target="_blank";a.rel="noopener noreferrer";});</script>
+</body>
+</html>
