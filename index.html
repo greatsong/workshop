@@ -48,6 +48,18 @@
   .labcard .e{font-size:34px;} .labcard h3{margin:8px 0 4px;font-size:1.2rem;}
   .labcard p{margin:0;color:var(--muted);font-size:.92rem;}
   .labcard .go{margin-top:10px;color:var(--accent);font-weight:800;font-size:.9rem;}
+  .cw{display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;
+    background:linear-gradient(135deg,#F5F3FF,#FFFCF3);border:1.5px solid #C7BFF5;border-radius:16px;
+    padding:16px 18px;box-shadow:0 4px 16px rgba(99,102,241,.10);transition:transform .14s, box-shadow .14s;}
+  .cw:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(99,102,241,.20);}
+  .cw-logo{flex:0 0 auto;line-height:0;}
+  .cw-logo svg{width:46px;height:46px;border-radius:12px;box-shadow:0 2px 8px rgba(99,102,241,.25);}
+  .cw-body{display:flex;flex-direction:column;gap:2px;flex:1;text-align:left;}
+  .cw-kicker{font-size:.74rem;font-weight:800;color:#6366f1;letter-spacing:.04em;}
+  .cw-title{font-size:1.08rem;font-weight:900;color:var(--text);}
+  .cw-desc{font-size:.88rem;color:var(--muted);line-height:1.45;}
+  .cw-go{color:#6366f1;font-weight:900;font-size:1.2rem;flex:0 0 auto;}
+  @media(max-width:520px){ .cw{flex-wrap:wrap;gap:12px;} .cw-go{display:none;} }
   .foot{padding:40px 0 60px;color:var(--muted);font-size:.86rem;text-align:center;border-top:1px solid var(--border);}
   @media(max-width:600px){.qgrid,.api,.lab{grid-template-columns:1fr;}}
 </style>
@@ -178,6 +190,32 @@
       <div class="go">데이터 찾으러 가기 →</div>
     </a>
   </div>
+</div></div>
+
+<div id="weaver" class="section"><div class="wrap">
+  <span class="step" style="background:#6366f1;">시간이 허락한다면</span>
+  <h2>융합 수업, 한 걸음 더</h2>
+  <p class="lead">오늘 본 성취기준 연결을 <b>내 수업 설계</b>로 옮기고 싶다면, 다른 교과 선생님과 함께 설계해 보세요.</p>
+  <a class="cw" href="https://curriculum-weaver.vercel.app" target="_blank" rel="noopener">
+    <span class="cw-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#6366f1"/>
+  <path d="M32 10 C46 10, 56 18, 56 30 C56 42, 48 54, 34 54 C28 54, 22 50, 18 44 C14 38, 12 30, 14 22 C16 16, 22 10, 32 10Z" fill="white" fill-opacity="0.92"/>
+  <circle cx="22" cy="40" r="5" fill="#6366f1"/>
+  <circle cx="30" cy="17" r="5" fill="#8b5cf6"/>
+  <circle cx="42" cy="18" r="5" fill="#3b82f6"/>
+  <circle cx="49" cy="28" r="5" fill="#22c55e"/>
+  <circle cx="46" cy="40" r="5" fill="#f59e0b"/>
+  <circle cx="35" cy="48" r="5" fill="#ef4444"/>
+  <circle cx="36" cy="32" r="2" fill="white" opacity="0.7"/>
+  <circle cx="36" cy="32" r="0.8" fill="#6366f1"/>
+</svg></span>
+    <span class="cw-body">
+      <span class="cw-kicker">융합 수업 협력 설계 플랫폼</span>
+      <span class="cw-title">커리큘럼 위버</span>
+      <span class="cw-desc">AI가 교과 간 성취기준을 이어 <b>융합 수업</b>을 함께 설계합니다 — 40가지 설계 원리 기반</span>
+    </span>
+    <span class="cw-go">→</span>
+  </a>
 </div></div>
 
 <div id="review" class="section"><div class="wrap" style="text-align:center;">
