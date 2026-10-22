@@ -436,12 +436,17 @@
   <section class="slide" data-i="7" aria-label="마무리">
     <div class="kicker rise">그래서 오늘 우리는,</div>
     <h2 class="hero rise d1"><span class="cyan">데이터</span>에서<br>시작합니다</h2>
-    <a class="cta rise d3" href="https://greatsong.github.io/workshop/#why" target="_top" rel="noopener">
+    <a class="cta rise d3" id="ctaNext" href="https://greatsong.github.io/workshop/#why" target="_top" rel="noopener">
       워크샵 시작하기 <span class="arrow" aria-hidden="true">→</span>
     </a>
   </section>
 
 </main>
+<script>
+// 주소에 ?prev가 붙으면(교내 연수) 키노트 다음 순서인 '이전 학교' 앞 화면 지도로 넘어간다
+if(new URLSearchParams(location.search).has('prev'))
+  document.getElementById('ctaNext').href = 'https://greatsong.github.io/map/board.html?prev';
+</script>
 
 <nav class="dots" id="dots" aria-label="슬라이드 이동"></nav>
 <div class="counter" id="counter">01 / 08</div>

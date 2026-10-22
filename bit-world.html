@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>넓어지는 비트의 세상</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<style>
+  /* 전체 화면 3D 무대. 왼쪽 위 해설, 오른쪽 아래 연도 카운터, 맨 아래 연대표. 키노트와 같은 색: 아톰=골드, 비트=시안 */
+  :root{
+    --bg:#0A0A0B;
+    --ink:#F4F4F2;
+    --dim:#A6A6A2;
+    --faint:#5E5E60;
+    --amber:#F3B03A;
+    --cyan:#5AD6E6;
+    --veil:rgba(10,10,11,.74);
+    --veil0:rgba(10,10,11,0);
+    --rule:rgba(244,244,242,.16);
+    --chip:rgba(244,244,242,.06);
+    --chip-h:rgba(244,244,242,.13);
+    --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+    color-scheme:dark;
+  }
+  html,body{height:100%;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-body);overflow:hidden;-webkit-font-smoothing:antialiased;}
+  #stage{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none;}
+  #stage:active{cursor:grabbing;}
+
+  .hud{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
+    padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+    padding-block:calc(env(safe-area-inset-top,0px) + 20px) calc(env(safe-area-inset-bottom,0px) + 14px);
+    transition:opacity .5s;}
+  .hud.off{opacity:0;}
+  .hud.off *{pointer-events:none !important;}
+  .shade{position:fixed;left:0;top:0;width:min(700px,100%);height:380px;pointer-events:none;
+    background:radial-gradient(120% 100% at 0% 0%,var(--veil) 0%,var(--veil0) 72%);}
+  .shade.b{top:auto;bottom:0;left:0;width:100%;height:170px;background:linear-gradient(0deg,var(--veil) 0%,var(--veil0) 100%);}
+  .top{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .story{max-width:35rem;min-width:0;}
+  .story.in > *{animation:rise .8s cubic-bezier(.22,.61,.36,1) both;}
+  .story.in > *:nth-child(2){animation-delay:.08s;} .story.in > *:nth-child(3){animation-delay:.16s;}
+  @keyframes rise{from{opacity:0;transform:translateY(12px);filter:blur(4px);}to{opacity:1;transform:none;filter:none;}}
+  .era{font-family:var(--font-mono);font-weight:600;font-size:clamp(.8rem,1.5vw,.94rem);letter-spacing:.14em;
+    color:var(--cyan);margin:0 0 10px;}
+  .era.atom{color:var(--amber);}
+  h1{font-weight:700;font-size:clamp(1.65rem,4.4vw,3.1rem);line-height:1.18;letter-spacing:-.02em;margin:0 0 12px;
+    text-wrap:balance;word-break:keep-all;}
+  h1 .b{color:var(--cyan);} h1 .a{color:var(--amber);}
+  .cap{font-size:clamp(.96rem,1.85vw,1.14rem);line-height:1.7;color:var(--dim);margin:0;max-width:31rem;word-break:keep-all;}
+  .next{display:inline-flex;align-items:center;gap:10px;margin-top:20px;padding:11px 20px;border-radius:999px;pointer-events:auto;
+    border:1px solid var(--cyan);color:var(--ink);text-decoration:none;font-weight:600;font-size:.95rem;background:var(--chip);
+    box-shadow:0 0 24px rgba(90,214,230,.25);transition:background .2s;}
+  .next:hover{background:var(--chip-h);}
+  .next:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:16px;font-size:.8rem;color:var(--dim);}
+  .legend span{display:inline-flex;align-items:center;gap:8px;}
+  .sw{width:14px;height:10px;border:1.5px solid var(--amber);border-bottom-width:0;}
+  .bitsw{font-family:var(--font-mono);font-weight:600;color:var(--cyan);font-size:.8rem;letter-spacing:.06em;}
+
+  .tools{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;pointer-events:auto;flex-shrink:0;max-width:50%;}
+  button{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--rule);
+    border-radius:999px;padding:8px 14px;font-size:.84rem;cursor:pointer;transition:background .2s,border-color .2s,color .2s;}
+  button:hover{background:var(--chip-h);}
+  button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+  button[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan);}
+  button:disabled{opacity:.35;cursor:default;}
+
+  .bottom{position:relative;display:flex;flex-direction:column;gap:8px;pointer-events:auto;}
+  .year{position:absolute;right:0;bottom:calc(100% + 6px);text-align:right;pointer-events:none;transition:opacity .6s;}
+  .year.hide{opacity:0;}
+  .year .num{display:block;font-family:var(--font-mono);font-weight:500;font-size:clamp(3rem,10vw,7.5rem);line-height:.9;
+    letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.2px var(--cyan);font-variant-numeric:tabular-nums;
+    text-shadow:0 0 28px rgba(90,214,230,.35);}
+  .year .what{display:block;margin-top:8px;font-family:var(--font-mono);font-size:.8rem;letter-spacing:.08em;color:var(--dim);}
+  .tlrow{display:flex;align-items:center;gap:10px;}
+  .nav{flex-shrink:0;width:40px;height:40px;padding:0;display:grid;place-items:center;font-size:1.15rem;}
+  ol.tl{list-style:none;margin:0;padding:0;flex:1;min-width:0;display:grid;grid-template-columns:repeat(6,1fr);position:relative;}
+  ol.tl::before,ol.tl .fill{content:"";position:absolute;left:calc(100%/12);right:calc(100%/12);top:11px;height:2px;background:var(--rule);}
+  ol.tl .fill{background:linear-gradient(90deg,var(--amber),var(--cyan) 22%);right:auto;width:0;transition:width 1s cubic-bezier(.22,.61,.36,1);}
+  ol.tl li{position:relative;display:flex;justify-content:center;min-width:0;}
+  ol.tl button{background:none;border:0;border-radius:10px;padding:2px 4px 4px;display:flex;flex-direction:column;
+    align-items:center;gap:6px;min-width:0;width:100%;}
+  ol.tl .dot{width:14px;height:14px;margin-top:4px;border-radius:50%;background:var(--bg);border:2px solid var(--faint);
+    transition:border-color .4s,background .4s,transform .4s,box-shadow .4s;}
+  ol.tl li.past .dot{border-color:var(--cyan);background:var(--cyan);}
+  ol.tl li.now .dot{border-color:var(--cyan);background:var(--bg);transform:scale(1.35);box-shadow:0 0 14px var(--cyan);}
+  ol.tl li:first-of-type.past .dot,ol.tl li:first-of-type.now .dot{border-color:var(--amber);}
+  ol.tl li:first-of-type.past .dot{background:var(--amber);}
+  ol.tl li:first-of-type.now .dot{box-shadow:0 0 14px var(--amber);}
+  ol.tl .lb{font-size:.86rem;font-weight:600;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  ol.tl .yr{font-family:var(--font-mono);font-size:.72rem;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  ol.tl li.now .lb{color:var(--ink);} ol.tl li.now .yr{color:var(--cyan);}
+  .pbar{height:2px;margin:0 50px;background:var(--veil0);overflow:hidden;border-radius:2px;}
+  .pbar i{display:block;height:100%;width:0;background:var(--cyan);opacity:.7;}
+  .hint{font-size:.76rem;color:var(--faint);text-align:center;margin:0;}
+  kbd{font-family:var(--font-mono);font-size:.72rem;border:1px solid var(--rule);border-radius:4px;padding:0 4px;color:var(--dim);}
+  .nogl{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--dim);}
+
+  @media (max-width:640px){
+    ol.tl .yr{display:none;}
+    ol.tl .lb{font-size:.72rem;}
+    .nav{display:none;}
+    ol.tl .lb{letter-spacing:-.02em;}
+    .legend,.hint{display:none;}
+    .tools{max-width:46%;}
+    .tools button{padding:6px 10px;font-size:.74rem;}
+    .shade{height:320px;}
+    .pbar{margin:0 8px;}
+  }
+  @media (prefers-reduced-motion:reduce){ ol.tl .fill{transition:none;} .story.in > *{animation:none;} }
+</style>
+</head>
+<body>
+
+<canvas id="stage" tabindex="0" aria-label="비트의 세상이 3차원으로 넓어지는 장면. 왼쪽 오른쪽 방향키로 단계를 넘깁니다."></canvas>
+
+<div class="hud" id="hud">
+  <div class="shade" aria-hidden="true"></div>
+  <div class="shade b" aria-hidden="true"></div>
+  <div class="top">
+    <div class="story in" id="story" aria-live="polite">
+      <p class="era atom" id="era">아톰의 세상</p>
+      <h1 id="title">우리가 사는 곳</h1>
+      <p class="cap" id="cap">물질과 몸, 그리고 공간. 손으로 만질 수 있는 모든 것.</p>
+      <a class="next" id="nextLink" href="intro-keynote.html" hidden>키노트로 이어가기 <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="tools">
+      <button id="play" type="button" aria-pressed="false">자동 재생</button>
+      <button id="sound" type="button" aria-pressed="false">소리</button>
+      <button id="full" type="button">전체 화면</button>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="year hide" id="year" aria-hidden="true"><span class="num" id="ynum">1981</span><span class="what" id="ywhat"></span></div>
+    <div class="legend">
+      <span><i class="sw" aria-hidden="true"></i>아톰의 세상 · 건물과 사람</span>
+      <span><b class="bitsw" aria-hidden="true">0 1</b>비트의 세상 · 정보와 네트워크</span>
+    </div>
+    <div class="tlrow">
+      <button class="nav" id="prev" type="button" aria-label="이전 단계">‹</button>
+      <ol class="tl" id="tl"><span class="fill" id="fill" aria-hidden="true"></span></ol>
+      <button class="nav" id="next" type="button" aria-label="다음 단계">›</button>
+    </div>
+    <div class="pbar" aria-hidden="true"><i id="pfill"></i></div>
+    <p class="hint">끌어서 돌리기 · 휠로 확대 · <kbd>←</kbd> <kbd>→</kbd> 넘기기 · <kbd>H</kbd> 글자 숨기기 · <kbd>F</kbd> 전체 화면</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script>
+(function(){
+'use strict';
+/* ═════════ 단계 ═════════ */
+const STAGES = [
+  {tl:'아톰', yr:'지금', era:'아톰의 세상', atom:true, year:null, what:'',
+   title:'우리가 사는 곳',
+   cap:'물질과 몸, 그리고 공간. 손으로 만질 수 있는 모든 것.'},
+  {tl:'PC', yr:'1981', era:'1980년대 · PC', year:1981, what:'IBM PC 출시',
+   title:'건물마다 생긴 <span class="b">작은 비트의 세상</span>',
+   cap:'개인용 컴퓨터가 집과 학교에 들어옵니다. PC가 놓인 건물마다 작은 비트의 세상이 생깁니다.'},
+  {tl:'인터넷', yr:'1991', era:'1990년대 · 인터넷', year:1991, what:'월드와이드웹 공개',
+   title:'서로 <span class="b">이어지는</span> 비트',
+   cap:'흩어져 있던 컴퓨터가 네트워크로 연결되고, 비트의 세상이 도시 위로 넓게 퍼집니다.'},
+  {tl:'스마트폰', yr:'2007', era:'2007년~ · 스마트폰', year:2007, what:'아이폰 공개',
+   title:'손안으로 들어온 <span class="b">비트</span>',
+   cap:'비트가 책상을 떠나 사람과 함께 거리를 움직입니다. 공간 어디에나 비트가 있습니다.'},
+  {tl:'AI', yr:'2022', era:'2022년~ · 생성형 AI', year:2022, what:'챗GPT 공개',
+   title:'<span class="a">아톰</span>과 <span class="b">비트</span>를 잇는 AI',
+   cap:'쌓인 데이터에서 배운 AI가 높은 층을 이루고, 그 결과가 다시 아톰의 세상으로 내려옵니다.'},
+  {tl:'10년 후', yr:'2036', era:'10년 후', year:2036, what:'10년 후',
+   title:'더 넓어지는 <span class="b">비트의 세상</span>',
+   cap:'비트의 세상은 더 넓어지고, 아톰의 세상과 서로 더 큰 영향을 주고받을 것'}
+];
+const LAST = STAGES.length-1;
+const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const SMALL = Math.min(innerWidth, innerHeight) < 700;
+const Q = SMALL ? 0.6 : 1;
+
+/* ═════════ 렌더러 ═════════ */
+const canvas = document.getElementById('stage');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'}); }
+catch(e){
+  document.body.insertAdjacentHTML('beforeend','<div class="nogl">이 브라우저에서는 3D 화면(WebGL)을 켤 수 없습니다. 크롬이나 엣지 최신 버전에서 열어 주세요.</div>');
+  return;
+}
+let DPR = Math.min(window.devicePixelRatio || 1, SMALL ? 1.5 : 2);
+renderer.setPixelRatio(DPR);
+const BG=new THREE.Color('#0A0A0B'), CYAN=new THREE.Color('#5AD6E6'), AMBER=new THREE.Color('#F3B03A'), ICE=new THREE.Color('#CFF6FA');
+renderer.setClearColor(BG);
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(BG,0.014);
+const camera=new THREE.PerspectiveCamera(45,1,0.1,500);
+camera.position.set(36,30,44);
+const controls=new THREE.OrbitControls(camera,canvas);
+controls.enableDamping=true; controls.dampingFactor=0.06; controls.enablePan=false;
+controls.minDistance=8; controls.maxDistance=180; controls.maxPolarAngle=Math.PI*0.495;
+controls.autoRotate=!reduce; controls.autoRotateSpeed=0.4;
+controls.target.set(0,1,0);
+
+/* 후처리: 빛 번짐 + 비네트·필름 결 */
+let composer=null, bloom=null, grainPass=null, usePost=!!(THREE.EffectComposer && THREE.UnrealBloomPass && THREE.RenderPass && THREE.ShaderPass);
+if(usePost){
+  try{
+    composer=new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene,camera));
+    bloom=new THREE.UnrealBloomPass(new THREE.Vector2(256,256), 0.8, 0.5, 0.24);
+    composer.addPass(bloom);
+    grainPass=new THREE.ShaderPass({
+      uniforms:{tDiffuse:{value:null},uTime:{value:0}},
+      vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader:`uniform sampler2D tDiffuse; uniform float uTime; varying vec2 vUv;
+        float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
+        void main(){ vec4 c=texture2D(tDiffuse,vUv); float v=smoothstep(1.05,0.25,length(vUv-0.5)*1.25);
+          c.rgb*=mix(0.5,1.0,v); c.rgb+=(h(vUv*vec2(1733.0,977.0)+fract(uTime))-0.5)*0.03; gl_FragColor=vec4(c.rgb,1.0); }`
+    });
+    composer.addPass(grainPass);
+  }catch(e){ usePost=false; composer=null; }
+}
+
+/* 시드 고정 난수 */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rand=mulberry32(20261026);
+const gauss=()=>{let u=0,v=0;while(!u)u=rand();while(!v)v=rand();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const lerp=(a,b,t)=>a+(b-a)*t, frac=x=>x-Math.floor(x), clamp01=x=>Math.max(0,Math.min(1,x));
+
+/* ═════════ 아톰의 세상 ═════════ */
+scene.add(new THREE.AmbientLight(0x4a4232,1.0));
+const sun=new THREE.DirectionalLight(0xffe2b0,0.55); sun.position.set(12,24,8); scene.add(sun);
+(function ground(){
+  const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d');
+  const rg=g.createRadialGradient(128,128,0,128,128,128);
+  rg.addColorStop(0,'rgba(22,19,15,1)'); rg.addColorStop(.5,'rgba(15,14,12,.92)'); rg.addColorStop(1,'rgba(10,10,11,0)');
+  g.fillStyle=rg; g.fillRect(0,0,256,256);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(110,110),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));
+  m.rotation.x=-Math.PI/2; scene.add(m);
+  const pg=new THREE.PolarGridHelper(17,16,8,96,AMBER,AMBER); pg.material.transparent=true; pg.material.opacity=0.09; pg.position.y=0.01; scene.add(pg);
+})();
+
+const buildings=[];
+for(let tries=0;buildings.length<66&&tries<5000;tries++){
+  const r=Math.sqrt(rand())*11.8+0.7, th=rand()*Math.PI*2, x=Math.cos(th)*r, z=Math.sin(th)*r;
+  if(buildings.some(b=>Math.hypot(b.x-x,b.z-z)<1.5)) continue;
+  const w=0.6+rand()*0.55, d=0.6+rand()*0.55, h=0.45+rand()*(0.6+2.9*Math.max(0,1-r/12.5));
+  buildings.push({x,z,w,d,h});
+}
+const order=buildings.map((b,i)=>i).sort(()=>rand()-0.5);
+const PCN=14, pcB=order.slice(0,PCN), pcSet=new Set(pcB);
+(function drawBuildings(){
+  const inst=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0x16130e,roughness:1,metalness:0}),buildings.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=[];
+  buildings.forEach((b,i)=>{ m.compose(new THREE.Vector3(b.x,b.h/2,b.z),q,new THREE.Vector3(b.w,b.h,b.d)); inst.setMatrixAt(i,m);
+    const X=[b.x-b.w/2,b.x+b.w/2],Y=[0,b.h],Z=[b.z-b.d/2,b.z+b.d/2];
+    for(const y of Y)for(const z of Z)e.push(X[0],y,z,X[1],y,z);
+    for(const x of X)for(const z of Z)e.push(x,Y[0],z,x,Y[1],z);
+    for(const x of X)for(const y of Y)e.push(x,y,Z[0],x,y,Z[1]); });
+  scene.add(inst);
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(e,3));
+  scene.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:AMBER,transparent:true,opacity:0.5})));
+})();
+
+/* 창문 불빛: 아톰(골드)에서 비트(시안)로 물든다 */
+const win={pos:[],tone:[],target:[],lit:[],ph:[],bld:[],pick:[]};
+buildings.forEach((b,bi)=>{
+  for(let y=0.24;y<b.h-0.12;y+=0.27){
+    const faces=[[b.x,b.z+b.d/2+0.012,'x',b.w],[b.x,b.z-b.d/2-0.012,'x',b.w],[b.x+b.w/2+0.012,b.z,'z',b.d],[b.x-b.w/2-0.012,b.z,'z',b.d]];
+    for(const [fx,fz,ax,len] of faces) for(const o of [-0.24,0.24]){
+      if(rand()<0.18) continue;
+      const px=ax==='x'?fx+o*len:fx, pz=ax==='z'?fz+o*len:fz;
+      win.pos.push(px,y,pz); win.tone.push(0); win.lit.push(rand()<0.72?1:0.15); win.ph.push(rand()*6.28); win.bld.push(bi); win.pick.push(rand());
+    } } });
+const WN=win.lit.length;
+const winTone=new Float32Array(win.tone);
+const winG=new THREE.BufferGeometry();
+winG.setAttribute('position',new THREE.Float32BufferAttribute(win.pos,3));
+winG.setAttribute('aTone',new THREE.BufferAttribute(winTone,1));
+winG.setAttribute('aLit',new THREE.Float32BufferAttribute(win.lit,1));
+winG.setAttribute('aPh',new THREE.Float32BufferAttribute(win.ph,1));
+const winMat=new THREE.ShaderMaterial({
+  uniforms:{uTime:{value:0},uPix:{value:DPR},uCyan:{value:CYAN},uAmber:{value:AMBER},uFog:{value:0.014}},
+  vertexShader:`attribute float aTone; attribute float aLit; attribute float aPh; uniform float uTime; uniform float uPix;
+    varying float vA; varying float vT; varying float vD;
+    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv;
+      gl_PointSize=clamp(uPix*70.0/max(1.0,-mv.z),1.0,12.0); vA=aLit*(0.78+0.22*sin(uTime*0.6+aPh)); vT=aTone; vD=-mv.z; }`,
+  fragmentShader:`uniform vec3 uCyan; uniform vec3 uAmber; uniform float uFog; varying float vA; varying float vT; varying float vD;
+    void main(){ vec2 d=abs(gl_PointCoord-0.5); float m=step(d.x,0.3)*step(d.y,0.4); float f=exp(-uFog*uFog*vD*vD*0.55);
+      float a=m*vA*f*0.85; if(a<0.01) discard; gl_FragColor=vec4(mix(uAmber,uCyan,vT)*a,a); }`,
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
+});
+scene.add(new THREE.Points(winG,winMat));
+
+/* 거리를 걷는 사람들 */
+const PEOPLE=SMALL?120:180, people=[];
+for(let i=0;i<PEOPLE;i++){ let cx,cz,ok=false;
+  for(let t=0;t<40&&!ok;t++){ const r=Math.sqrt(rand())*13.5, a=rand()*Math.PI*2; cx=Math.cos(a)*r; cz=Math.sin(a)*r;
+    ok=!buildings.some(b=>Math.abs(b.x-cx)<b.w/2+0.25&&Math.abs(b.z-cz)<b.d/2+0.25); }
+  people.push({cx,cz,rr:0.4+rand()*1.3,w:(rand()<0.5?-1:1)*(0.08+rand()*0.16),ph:rand()*6.28,x:cx,z:cz}); }
+const personMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.055,0.075,0.4,6),new THREE.MeshBasicMaterial({color:0x6e5f45}),PEOPLE);
+const headMesh=new THREE.InstancedMesh(new THREE.SphereGeometry(0.06,8,6),new THREE.MeshBasicMaterial({color:0x8f7f60}),PEOPLE);
+scene.add(personMesh,headMesh);
+const _m=new THREE.Matrix4();
+function movePeople(t){ people.forEach((p,i)=>{ const a=t*p.w+p.ph; p.x=p.cx+Math.cos(a)*p.rr; p.z=p.cz+Math.sin(a)*p.rr;
+  _m.makeTranslation(p.x,0.2,p.z); personMesh.setMatrixAt(i,_m); _m.makeTranslation(p.x,0.46,p.z); headMesh.setMatrixAt(i,_m); });
+  personMesh.instanceMatrix.needsUpdate=true; headMesh.instanceMatrix.needsUpdate=true; }
+
+/* ═════════ 비트의 세상: 구조물 ═════════ */
+function hemiLines(rings,meridians,seg){ const v=[];
+  for(let k=1;k<=rings;k++){ const el=(k/(rings+1))*Math.PI/2, y=Math.sin(el), r=Math.cos(el);
+    for(let j=0;j<seg;j++){ const a=j/seg*Math.PI*2,b=(j+1)/seg*Math.PI*2; v.push(Math.cos(a)*r,y,Math.sin(a)*r,Math.cos(b)*r,y,Math.sin(b)*r); } }
+  for(let j=0;j<seg;j++){ const a=j/seg*Math.PI*2,b=(j+1)/seg*Math.PI*2; v.push(Math.cos(a),0,Math.sin(a),Math.cos(b),0,Math.sin(b)); }
+  for(let m=0;m<meridians;m++){ const a=m/meridians*Math.PI*2;
+    for(let k=0;k<seg/4;k++){ const e1=k/(seg/4)*Math.PI/2,e2=(k+1)/(seg/4)*Math.PI/2;
+      v.push(Math.cos(a)*Math.cos(e1),Math.sin(e1),Math.sin(a)*Math.cos(e1),Math.cos(a)*Math.cos(e2),Math.sin(e2),Math.sin(a)*Math.cos(e2)); } }
+  return v; }
+const lineMat=o=>new THREE.LineBasicMaterial(Object.assign({color:CYAN,transparent:true,opacity:0,depthWrite:false},o||{}));
+
+/* 1980s: PC가 놓인 건물을 감싸는 작은 섬 */
+const pcTop=pcB.map(i=>new THREE.Vector3(buildings[i].x,buildings[i].h+0.15,buildings[i].z));
+const isleUnit=hemiLines(2,8,32), isleV=[];
+pcB.forEach(bi=>{ const b=buildings[bi], rx=Math.max(b.w,b.d)*0.75+0.45, ry=b.h+0.55;
+  for(let i=0;i<isleUnit.length;i+=3) isleV.push(b.x+isleUnit[i]*rx, isleUnit[i+1]*ry, b.z+isleUnit[i+2]*rx); });
+const isleG=new THREE.BufferGeometry(); isleG.setAttribute('position',new THREE.Float32BufferAttribute(isleV,3));
+const isleMat=lineMat(); scene.add(new THREE.LineSegments(isleG,isleMat));
+
+/* 1990s: PC를 잇는 호 */
+const edgesIdx=[], seen=new Set();
+const addEdge=(a,b)=>{ const k=a<b?a+'-'+b:b+'-'+a; if(a!==b&&!seen.has(k)){ seen.add(k); edgesIdx.push([a,b]); } };
+pcTop.forEach((p,a)=>pcTop.map((q,b)=>[b,p.distanceTo(q)]).sort((u,v)=>u[1]-v[1]).slice(1,3).forEach(([b])=>addEdge(a,b)));
+for(let k=0;k<7;k++) addEdge(Math.floor(rand()*PCN),Math.floor(rand()*PCN));
+const SAMP=64;
+const arcs=edgesIdx.map(([a,b])=>{ const A=pcTop[a],B=pcTop[b],mid=A.clone().add(B).multiplyScalar(0.5); mid.y+=1.4+A.distanceTo(B)*0.32;
+  return new THREE.QuadraticBezierCurve3(A,mid,B).getPoints(SAMP); });
+const arcMat=lineMat(); const arcGroup=new THREE.Group();
+arcs.forEach(p=>arcGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),arcMat))); scene.add(arcGroup);
+function arcAt(e,u,out){ const f=u*SAMP,i=Math.min(SAMP-1,Math.floor(f)),t=f-i,P=arcs[e][i],R=arcs[e][i+1];
+  out[0]=lerp(P.x,R.x,t); out[1]=lerp(P.y,R.y,t); out[2]=lerp(P.z,R.z,t); return out; }
+
+/* 경계: 커지는 반구와 바깥으로 번지는 물결 */
+const hemiG=new THREE.BufferGeometry(); hemiG.setAttribute('position',new THREE.Float32BufferAttribute(hemiLines(6,20,96),3));
+const domeMat=lineMat(); const domeWire=new THREE.LineSegments(hemiG,domeMat); domeWire.scale.setScalar(0.01); scene.add(domeWire);
+const rippleG=new THREE.BufferGeometry(); rippleG.setAttribute('position',new THREE.Float32BufferAttribute(hemiLines(3,12,96),3));
+const ripples=[0,1].map(()=>{ const m=lineMat(); const o=new THREE.LineSegments(rippleG,m); o.scale.setScalar(0.01); scene.add(o); return {o,m}; });
+
+/* 2007~: 기지국과 전파 고리 */
+const towers=[[-6.5,4.8],[7.2,3.6],[1.5,-8.2],[-3.0,-3.0]].map(([x,z])=>({x,z,h:4.2}));
+const towerMat=new THREE.LineBasicMaterial({color:AMBER,transparent:true,opacity:0});
+{ const v=[]; towers.forEach(t=>{ v.push(t.x-0.18,0,t.z,t.x,t.h,t.z, t.x+0.18,0,t.z,t.x,t.h,t.z, t.x,0,t.z-0.18,t.x,t.h,t.z); });
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(v,3)); scene.add(new THREE.LineSegments(g,towerMat)); }
+const ringGeo=new THREE.RingGeometry(0.96,1,64); ringGeo.rotateX(-Math.PI/2);
+const rings=[]; towers.forEach((t,ti)=>{ for(let k=0;k<3;k++){ const m=new THREE.MeshBasicMaterial({color:CYAN,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});
+  const o=new THREE.Mesh(ringGeo,m); o.position.set(t.x,t.h-0.2,t.z); scene.add(o); rings.push({o,m,ph:k/3+ti*0.17}); } });
+
+/* 2022~: AI 층, 층 사이를 흐르는 신호 */
+const LAYERS=[{y:7.6,n:12,r:6.6},{y:9.8,n:17,r:8.4},{y:12.0,n:17,r:8.4},{y:14.2,n:9,r:5.2}];
+const aiNodes=[], layerOf=[];
+LAYERS.forEach((L,li)=>{ for(let j=0;j<L.n;j++){ const rr=L.r*Math.sqrt((j+0.5)/L.n), a=j*2.39996+li*0.9;
+  aiNodes.push(new THREE.Vector3(Math.cos(a)*rr,L.y,Math.sin(a)*rr)); layerOf.push(li); } });
+const aiGroup=new THREE.Group(); scene.add(aiGroup);
+const nodeMat=new THREE.MeshBasicMaterial({color:ICE,transparent:true,opacity:0});
+const nodeMesh=new THREE.InstancedMesh(new THREE.SphereGeometry(0.14,12,8),nodeMat,aiNodes.length);
+aiNodes.forEach((p,i)=>{ _m.makeTranslation(p.x,p.y,p.z); nodeMesh.setMatrixAt(i,_m); }); aiGroup.add(nodeMesh);
+const netP=[], netU=[], netS=[];
+aiNodes.forEach((p,i)=>{ const li=layerOf[i]; if(li===LAYERS.length-1) return;
+  aiNodes.map((q,j)=>[j,q]).filter(([j])=>layerOf[j]===li+1).sort((u,v)=>p.distanceTo(u[1])-p.distanceTo(v[1])).slice(0,3)
+   .forEach(([,q])=>{ const s=rand(); netP.push(p.x,p.y,p.z,q.x,q.y,q.z); netU.push(0,1); netS.push(s,s); }); });
+const netG=new THREE.BufferGeometry();
+netG.setAttribute('position',new THREE.Float32BufferAttribute(netP,3));
+netG.setAttribute('aU',new THREE.Float32BufferAttribute(netU,1));
+netG.setAttribute('aS',new THREE.Float32BufferAttribute(netS,1));
+const netMat=new THREE.ShaderMaterial({
+  uniforms:{uTime:{value:0},uOp:{value:0},uCyan:{value:CYAN}},
+  vertexShader:'attribute float aU; attribute float aS; varying float vU; varying float vS; void main(){ vU=aU; vS=aS; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader:`uniform float uTime; uniform float uOp; uniform vec3 uCyan; varying float vU; varying float vS;
+    void main(){ float h=fract(uTime*0.45+vS); float p=smoothstep(0.16,0.0,abs(vU-h)); float a=uOp*(0.22+1.6*p);
+      gl_FragColor=vec4(uCyan*a,a); }`,
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
+});
+aiGroup.add(new THREE.LineSegments(netG,netMat));
+const bottomNodes=aiNodes.map((p,i)=>i).filter(i=>layerOf[i]===0);
+let aiScale=1;
+const nodeWorld=(n,out)=>{ const p=aiNodes[n], c=Math.cos(aiGroup.rotation.y), s=Math.sin(aiGroup.rotation.y);
+  out[0]=(p.x*c+p.z*s)*aiScale; out[1]=p.y*aiScale; out[2]=(-p.x*s+p.z*c)*aiScale; return out; };
+
+/* AI ↔ 아톰: 옥상과 가장 아래층을 잇는 빛줄기 */
+const beamB=order.slice(PCN,PCN+24);
+const beams=beamB.map(bi=>{ const b=buildings[bi];
+  const n=bottomNodes.slice().sort((u,v)=>Math.hypot(aiNodes[u].x-b.x,aiNodes[u].z-b.z)-Math.hypot(aiNodes[v].x-b.x,aiNodes[v].z-b.z))[0];
+  return {bi,bottom:new THREE.Vector3(b.x,b.h,b.z),node:n}; });
+const beamG=new THREE.BufferGeometry();
+beamG.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(beams.length*6),3));
+{ const c=[]; beams.forEach(()=>c.push(AMBER.r,AMBER.g,AMBER.b,CYAN.r,CYAN.g,CYAN.b)); beamG.setAttribute('color',new THREE.Float32BufferAttribute(c,3)); }
+const beamMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});
+scene.add(new THREE.LineSegments(beamG,beamMat));
+
+/* ═════════ 비트 입자: 0과 1 ═════════ */
+const glyphCanvas=document.createElement('canvas'); glyphCanvas.width=128; glyphCanvas.height=64;
+const glyphTex=new THREE.CanvasTexture(glyphCanvas);
+function drawGlyphs(){ const g=glyphCanvas.getContext('2d'); g.clearRect(0,0,128,64); g.fillStyle='#fff'; g.textAlign='center'; g.textBaseline='middle';
+  g.font='600 50px "IBM Plex Mono", ui-monospace, Menlo, monospace'; g.shadowColor='rgba(255,255,255,.9)'; g.shadowBlur=4;
+  g.fillText('0',32,35); g.fillText('1',96,35); glyphTex.needsUpdate=true; }
+drawGlyphs(); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(drawGlyphs);
+
+const R={PC:0,NET:1,DOME:2,PHONE:3,AI:4,FLOW:5};
+const PER_PERSON=Math.round(12*Q);
+const COUNTS=[[R.PC,Math.round(900*Q)],[R.NET,Math.round(1600*Q)],[R.DOME,Math.round(1900*Q)],[R.PHONE,PEOPLE*PER_PERSON],[R.AI,Math.round(1800*Q)],[R.FLOW,Math.round(1200*Q)]];
+const N=COUNTS.reduce((s,c)=>s+c[1],0);
+const role=new Uint8Array(N), ref=new Uint16Array(N), u0=new Float32Array(N), spd=new Float32Array(N), ph=new Float32Array(N);
+const off=new Float32Array(N*3), dir=new Float32Array(N*3);
+const pos=new Float32Array(N*3), alpha=new Float32Array(N), glyph=new Float32Array(N), tone=new Float32Array(N), size=new Float32Array(N);
+const BASE_A=[0.95,0.9,0.36,0.9,0.9,0.95], BASE_S=[1.05,1.3,1.0,0.95,1.1,1.25];
+{ let i=0; for(const [r,c] of COUNTS) for(let k=0;k<c;k++,i++){
+  role[i]=r; u0[i]=rand(); ph[i]=rand()*Math.PI*2; spd[i]=0.05+rand()*0.08; glyph[i]=rand()<0.5?0:1; size[i]=BASE_S[r]*(0.8+rand()*0.45);
+  off[i*3]=gauss(); off[i*3+1]=gauss(); off[i*3+2]=gauss();
+  if(r===R.PC) ref[i]=k%PCN;
+  else if(r===R.NET) ref[i]=k%arcs.length;
+  else if(r===R.DOME){ const y=Math.pow(rand(),0.8), a=rand()*Math.PI*2, s=Math.sqrt(1-y*y); dir[i*3]=Math.cos(a)*s; dir[i*3+1]=y; dir[i*3+2]=Math.sin(a)*s; ref[i]=k%PCN; }
+  else if(r===R.PHONE){ ref[i]=Math.floor(k/PER_PERSON); spd[i]=0.8+rand()*1.6; u0[i]=0.12+rand()*0.42; }
+  else if(r===R.AI) ref[i]=k%aiNodes.length;
+  else { ref[i]=k%beams.length; tone[i]=(k%2===0)?1:0; }
+  pos[i*3]=0; pos[i*3+1]=0.5; pos[i*3+2]=0; alpha[i]=0;
+} }
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+geo.setAttribute('aAlpha',new THREE.BufferAttribute(alpha,1));
+geo.setAttribute('aGlyph',new THREE.BufferAttribute(glyph,1));
+geo.setAttribute('aTone',new THREE.BufferAttribute(tone,1));
+geo.setAttribute('aSize',new THREE.BufferAttribute(size,1));
+const ptsMat=new THREE.ShaderMaterial({
+  uniforms:{uTex:{value:glyphTex},uCyan:{value:CYAN},uAmber:{value:AMBER},uScale:{value:150},uPix:{value:DPR},uFog:{value:0.014}},
+  vertexShader:`attribute float aAlpha; attribute float aGlyph; attribute float aTone; attribute float aSize;
+    uniform float uScale; uniform float uPix; varying float vA; varying float vG; varying float vT; varying float vD;
+    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv;
+      gl_PointSize=min(60.0,aSize*uPix*uScale/max(1.0,-mv.z)); vA=aAlpha; vG=aGlyph; vT=aTone; vD=-mv.z; }`,
+  fragmentShader:`uniform sampler2D uTex; uniform vec3 uCyan; uniform vec3 uAmber; uniform float uFog;
+    varying float vA; varying float vG; varying float vT; varying float vD;
+    void main(){ vec2 uv=gl_PointCoord; uv.y=1.0-uv.y; uv.x=(uv.x+vG)*0.5; float g=texture2D(uTex,uv).a;
+      float f=exp(-uFog*uFog*vD*vD*0.55); float a=g*vA*f; if(a<0.01) discard; gl_FragColor=vec4(mix(uCyan,uAmber,vT)*a,a); }`,
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
+});
+const points=new THREE.Points(geo,ptsMat); points.frustumCulled=false; scene.add(points);
+
+/* ═════════ 단계별 값 ═════════ */
+const CAM=[{r:31,phi:1.12,ty:0.8,sw:0},{r:22,phi:1.02,ty:1.5,sw:0.7},{r:32,phi:0.96,ty:2.4,sw:0.6},{r:27,phi:1.16,ty:1.2,sw:0.8},{r:44,phi:1.0,ty:7,sw:0.6},{r:84,phi:1.04,ty:11,sw:0.9}];
+const DOME=[[0.01,0.45],[0.01,0.45],[11,0.45],[14.5,0.62],[17.5,0.95],[36,1.0]];
+const FOG=[0.014,0.014,0.013,0.012,0.0095,0.0052];
+const DOME_A=[0,0,1,1,1.15,1.9], DOME_W=[0,0,0.13,0.14,0.15,0.2];
+const WIN_CYAN=[0,0,0,0.04,0.2,0.48];   // PC 건물 말고도 시안으로 물드는 창문 비율
+// 세로 화면에서는 도시가 잘리지 않게 더 멀리서 본다
+const camFor=s=>{ const c=CAM[s], k=camera.aspect<1?Math.min(1.9,1/Math.pow(camera.aspect,0.75)):1; return {r:c.r*k,phi:c.phi,ty:c.ty}; };
+const BLOOM=[0.55,0.85,1.0,1.0,1.1,1.15];
+let stage=0, stageTime=0, tween=null;
+const A={isle:0,arc:0,dr:0.01,dh:0.45,dw:0,node:0,net:0,beam:0,tower:0,ring:0,fog:0.014,ai:1,bloom:0.55};
+
+function goTo(s,opts){
+  opts=opts||{};
+  s=Math.max(0,Math.min(LAST,s));
+  if(s===stage&&!opts.force) return;
+  const prev=stage; stage=s; stageTime=0; renderHud(prev); chime(s);
+  const offv=camera.position.clone().sub(controls.target), sph=new THREE.Spherical().setFromVector3(offv);
+  const dur=reduce?0.001:(opts.dur||2.8);
+  tween={t:0,e:0,dur,from:{r:sph.radius,phi:sph.phi,ty:controls.target.y},to:camFor(s),sw:(s>prev?1:-1)*CAM[s].sw};
+  if(playTimer) playStart=performance.now();
+}
+
+/* ═════════ 화면 글자 ═════════ */
+const $=id=>document.getElementById(id);
+/* 깃허브 페이지에서는 마지막 단계 다음에 키노트로 이어진다(?prev도 함께 넘긴다) */
+const PREV_Q=new URLSearchParams(location.search).has('prev');
+const NEXT_URL=/github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)?('intro-keynote.html'+(PREV_Q?'?prev':'')):null;
+if(NEXT_URL) $('nextLink').href=NEXT_URL;
+const tl=$('tl'), story=$('story');
+STAGES.forEach((st,i)=>{ const li=document.createElement('li');
+  li.innerHTML=`<button type="button" aria-label="${st.era}"><span class="dot"></span><span class="lb">${st.tl}</span><span class="yr">${st.yr}</span></button>`;
+  li.querySelector('button').onclick=()=>{ stopPlay(); goTo(i); }; tl.appendChild(li); });
+let yearShown=null, yearAnim=null;
+function renderHud(prev){
+  const st=STAGES[stage];
+  story.classList.remove('in'); void story.offsetWidth;
+  $('era').textContent=st.era; $('era').classList.toggle('atom',!!st.atom);
+  $('title').innerHTML=st.title; $('cap').textContent=st.cap;
+  story.classList.add('in');
+  [...tl.querySelectorAll('li')].forEach((li,i)=>{ li.classList.toggle('past',i<stage); li.classList.toggle('now',i===stage);
+    li.querySelector('button').setAttribute('aria-current',i===stage?'step':'false'); });
+  $('fill').style.width=`calc((100% - 100%/6) * ${stage/LAST})`;
+  $('prev').disabled=stage===0; $('next').disabled=stage===LAST;
+  if(NEXT_URL) $('nextLink').hidden=stage!==LAST;
+  // 연도 카운터
+  const y=$('year');
+  if(st.year==null){ y.classList.add('hide'); }
+  else { y.classList.remove('hide'); $('ywhat').textContent=st.what;
+    const from=(yearShown==null)?st.year-12:yearShown, to=st.year, t0=performance.now(), d=reduce?1:1100;
+    cancelAnimationFrame(yearAnim);
+    const step=now=>{ const k=clamp01((now-t0)/d), e=1-Math.pow(1-k,3); $('ynum').textContent=Math.round(lerp(from,to,e)); if(k<1) yearAnim=requestAnimationFrame(step); };
+    yearAnim=requestAnimationFrame(step); yearShown=to; }
+}
+$('prev').onclick=()=>{ stopPlay(); goTo(stage-1); };
+$('next').onclick=()=>{ stopPlay(); goTo(stage+1); };
+
+/* 자동 재생 */
+const PLAY_MS=8000; let playTimer=null, playStart=0;
+function stopPlay(){ if(playTimer){ clearInterval(playTimer); playTimer=null; $('play').textContent='자동 재생'; $('play').setAttribute('aria-pressed','false'); $('pfill').style.width='0'; } }
+$('play').onclick=()=>{
+  if(playTimer){ stopPlay(); return; }
+  if(stage===LAST) goTo(0);
+  $('play').textContent='멈춤'; $('play').setAttribute('aria-pressed','true'); playStart=performance.now();
+  playTimer=setInterval(()=>{ const k=(performance.now()-playStart)/PLAY_MS; $('pfill').style.width=(clamp01(k)*100)+'%';
+    if(k>=1){ if(stage>=LAST){ stopPlay(); return; } goTo(stage+1); } },100);
+};
+$('full').onclick=()=>{ try{ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(()=>{}); }catch(e){} };
+const hud=$('hud');
+window.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){ e.preventDefault(); stopPlay(); if(stage===LAST&&NEXT_URL){ location.href=NEXT_URL; return; } goTo(stage+1); }
+  else if(['ArrowLeft','PageUp'].includes(e.key)){ e.preventDefault(); stopPlay(); goTo(stage-1); }
+  else if(e.key==='Home'){ stopPlay(); goTo(0); }
+  else if(e.key==='End'){ stopPlay(); goTo(LAST); }
+  else if(/^[0-5]$/.test(e.key)){ stopPlay(); goTo(+e.key); }
+  else if(e.key==='f'||e.key==='F'){ $('full').click(); }
+  else if(e.key==='h'||e.key==='H'){ hud.classList.toggle('off'); }
+});
+
+/* 소리(선택): 낮은 울림 위에 단계마다 맑은 음 */
+let ac=null, pad=null, soundOn=false;
+const SCALE=[220,261.63,293.66,329.63,392,440,523.25];
+function startSound(){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended') ac.resume();
+    if(!pad){ const g=ac.createGain(); g.gain.value=0; const f=ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value=520;
+      const o1=ac.createOscillator(), o2=ac.createOscillator(); o1.type='sine'; o2.type='triangle';
+      o1.frequency.value=110; o2.frequency.value=110*1.498; o2.detune.value=6;
+      o1.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination); o1.start(); o2.start(); pad={g,f,o1,o2}; }
+    pad.g.gain.setTargetAtTime(0.035,ac.currentTime,0.8); soundOn=true; padFor(stage);
+  }catch(e){ soundOn=false; }
+}
+function stopSound(){ if(pad&&ac) pad.g.gain.setTargetAtTime(0,ac.currentTime,0.4); soundOn=false; }
+function padFor(s){ if(!pad||!ac) return; pad.f.frequency.setTargetAtTime(420+s*180,ac.currentTime,1.2); pad.o1.frequency.setTargetAtTime([110,110,123.47,130.81,146.83,164.81][s],ac.currentTime,1.5); pad.o2.frequency.setTargetAtTime([110,110,123.47,130.81,146.83,164.81][s]*1.498,ac.currentTime,1.5); }
+function chime(s){ if(!soundOn||!ac) return; padFor(s);
+  [0,1].forEach(k=>{ const o=ac.createOscillator(), g=ac.createGain(); o.type='sine'; o.frequency.value=SCALE[(s+k*2)%SCALE.length]*2;
+    const t=ac.currentTime+k*0.12; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.05,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+1.7); }); }
+$('sound').onclick=()=>{ if(soundOn){ stopSound(); $('sound').setAttribute('aria-pressed','false'); } else { startSound(); $('sound').setAttribute('aria-pressed',soundOn?'true':'false'); } };
+
+/* ═════════ 크기와 품질 ═════════ */
+function resize(){ const w=innerWidth,h=innerHeight; renderer.setPixelRatio(DPR); renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  if(composer){ composer.setPixelRatio(DPR); composer.setSize(w,h); bloom.resolution.set(w*DPR*0.5,h*DPR*0.5); }
+  ptsMat.uniforms.uPix.value=DPR; winMat.uniforms.uPix.value=DPR; }
+addEventListener('resize',resize); resize();
+let perfAcc=0, perfN=0, perfChecks=0;
+function adapt(dt){ if(perfChecks>3) return; perfAcc+=dt; perfN++;
+  if(perfAcc>2.5){ const avg=perfAcc/perfN; perfAcc=0; perfN=0; perfChecks++;
+    if(avg>0.03){ if(DPR>1){ DPR=Math.max(1,DPR-0.5); resize(); } else if(composer){ composer=null; } } } }
+
+/* ═════════ 매 프레임 ═════════ */
+const tmp=[0,0,0], tmp2=[0,0,0];
+let last=performance.now(), clock=0;
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now; clock+=dt*(reduce?0.35:1); stageTime+=dt;
+  const ease=1-Math.exp(-dt*2.4), s=stage;
+  adapt(dt);
+
+  // 아톰의 세상
+  movePeople(clock);
+  winMat.uniforms.uTime.value=clock;
+  for(let i=0;i<WN;i++){ const tgt=(s>=1&&pcSet.has(win.bld[i]))?1:(win.pick[i]<WIN_CYAN[s]?1:0);
+    winTone[i]+= (tgt-winTone[i])*Math.min(1,dt*(0.8+win.pick[i]*1.2)); }
+  winG.attributes.aTone.needsUpdate=true;
+
+  // 비트의 세상 구조물
+  A.isle=lerp(A.isle,s===1?0.42:0,ease); isleMat.opacity=A.isle;
+  A.arc=lerp(A.arc,s>=5?0.26:(s>=2?0.4:0),ease); arcMat.opacity=A.arc;
+  A.dr=lerp(A.dr,DOME[s][0],ease*0.8); A.dh=lerp(A.dh,DOME[s][1],ease*0.8); A.dw=lerp(A.dw,DOME_W[s],ease);
+  domeMat.opacity=A.dw; domeWire.scale.set(A.dr,A.dr*A.dh,A.dr);
+  ripples.forEach((rp,k)=>{ const u=frac(clock*0.12+k*0.5), on=s>=3?1:0; const sc=A.dr*(1+u*0.9);
+    rp.o.scale.set(sc,sc*A.dh,sc); rp.m.opacity=on*A.dw*0.9*(1-u)*Math.min(1,u*6); });
+  A.tower=lerp(A.tower,s>=3?0.6:0,ease); towerMat.opacity=A.tower;
+  A.ring=lerp(A.ring,s>=3?1:0,ease);
+  rings.forEach(r=>{ const u=frac(clock*0.35+r.ph), sc=0.3+u*(s>=5?11:6.5); r.o.scale.set(sc,1,sc); r.m.opacity=A.ring*0.55*(1-u)*Math.min(1,u*8); });
+  A.ai=lerp(A.ai,s>=5?1.65:1,ease*0.7); aiScale=A.ai; aiGroup.scale.setScalar(aiScale); aiGroup.rotation.y+=dt*(s>=4?0.04:0);
+  A.node=lerp(A.node,s>=4?0.95:0,ease); nodeMat.opacity=A.node;
+  A.net=lerp(A.net,s>=4?1:0,ease); netMat.uniforms.uOp.value=A.net; netMat.uniforms.uTime.value=clock;
+  A.beam=lerp(A.beam,s>=4?1:0,ease); beamMat.opacity=A.beam*(0.2+0.14*Math.sin(clock*2.2));
+  { const bp=beamG.attributes.position.array; beams.forEach((b,k)=>{ nodeWorld(b.node,tmp);
+      bp.set([b.bottom.x,b.bottom.y,b.bottom.z,tmp[0],tmp[1],tmp[2]],k*6); }); beamG.attributes.position.needsUpdate=true; }
+  A.fog=lerp(A.fog,FOG[s],ease); scene.fog.density=A.fog; ptsMat.uniforms.uFog.value=A.fog; winMat.uniforms.uFog.value=A.fog;
+  if(bloom){ A.bloom=lerp(A.bloom,BLOOM[s],ease); bloom.strength=A.bloom; }
+  if(grainPass) grainPass.uniforms.uTime.value=clock;
+
+  // 비트 입자
+  const dR=A.dr, dH=A.dh, settled=stageTime>2.4;
+  for(let i=0;i<N;i++){
+    const r=role[i]; let x,y,z,a=0,moving=false; const j=i*3;
+    if(r===R.PC){ const b=buildings[pcB[ref[i]]];
+      if(s>=1){ x=b.x+off[j]*0.5; y=b.h*0.55+Math.abs(off[j+1])*0.55; z=b.z+off[j+2]*0.5; a=s>=5?0.6:1; }
+      else { x=b.x; y=b.h*0.5; z=b.z; } }
+    else if(r===R.NET){ const u=frac(u0[i]+clock*spd[i]); arcAt(ref[i],s>=2?u:0,tmp);
+      x=tmp[0]+off[j]*0.04; y=tmp[1]+off[j+1]*0.04; z=tmp[2]+off[j+2]*0.04; a=s>=2?Math.sin(Math.PI*u):0; moving=s>=2; }
+    else if(r===R.DOME){ if(s>=2){ x=dir[j]*dR; y=dir[j+1]*dR*dH; z=dir[j+2]*dR; a=DOME_A[s]*(0.55+0.45*Math.sin(clock*1.3+ph[i])); }
+      else { const p=pcTop[ref[i]]; x=p.x; y=p.y; z=p.z; } }
+    else if(r===R.PHONE){ const p=people[ref[i]], rr=u0[i], an=clock*spd[i]+ph[i];
+      if(s>=3){ x=p.x+Math.cos(an)*rr; y=0.62+Math.abs(off[j+1])*0.22+Math.sin(an*0.7)*0.05; z=p.z+Math.sin(an)*rr; a=1; moving=true; }
+      else { x=p.x; y=0.3; z=p.z; } }
+    else if(r===R.AI){ nodeWorld(ref[i],tmp);
+      if(s>=4){ const k=0.4*aiScale; x=tmp[0]+off[j]*k; y=tmp[1]+off[j+1]*k*0.55; z=tmp[2]+off[j+2]*k; a=0.72+0.28*Math.sin(clock*2+ph[i]); }
+      else { x=tmp[0]*0.25; y=0.8; z=tmp[2]*0.25; } }
+    else { const b=beams[ref[i]]; nodeWorld(b.node,tmp2);
+      const up=tone[i]>0.5, u=frac(u0[i]+(up?1:-1)*clock*spd[i]*1.7);
+      if(s>=4){ x=lerp(b.bottom.x,tmp2[0],u)+Math.sin(u*9+ph[i])*0.08; y=lerp(b.bottom.y,tmp2[1],u); z=lerp(b.bottom.z,tmp2[2],u); a=Math.sin(Math.PI*u); moving=true; }
+      else { x=b.bottom.x; y=b.bottom.y; z=b.bottom.z; } }
+    const ta=a*BASE_A[r];
+    if(moving&&settled){ pos[j]=x; pos[j+1]=y; pos[j+2]=z; alpha[i]+=(ta-alpha[i])*0.35; }
+    else { pos[j]+=(x-pos[j])*ease; pos[j+1]+=(y-pos[j+1])*ease; pos[j+2]+=(z-pos[j+2])*ease; alpha[i]+=(ta-alpha[i])*ease; }
+  }
+  for(let k=0;k<(reduce?4:32);k++){ const i=(Math.random()*N)|0; glyph[i]=1-glyph[i]; }
+  geo.attributes.position.needsUpdate=true; geo.attributes.aAlpha.needsUpdate=true; geo.attributes.aGlyph.needsUpdate=true;
+
+  // 카메라
+  if(tween){ tween.t=Math.min(1,tween.t+dt/tween.dur); const t=tween.t, e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, de=e-tween.e; tween.e=e;
+    const offv=camera.position.clone().sub(controls.target), sph=new THREE.Spherical().setFromVector3(offv);
+    sph.radius=lerp(tween.from.r,tween.to.r,e); sph.phi=lerp(tween.from.phi,tween.to.phi,e); sph.theta+=tween.sw*de;
+    controls.target.y=lerp(tween.from.ty,tween.to.ty,e);
+    camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+    if(t>=1) tween=null; }
+  controls.update();
+  if(composer) composer.render(); else renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+
+/* 시작: 멀리서 도시로 내려온다 */
+const mh=/^#s([0-5])$/.exec(location.hash||'');
+stage=mh?+mh[1]:0; renderHud(stage);
+{ const offv=camera.position.clone().sub(controls.target), sph=new THREE.Spherical().setFromVector3(offv);
+  tween={t:0,e:0,dur:reduce?0.001:3.4,from:{r:sph.radius,phi:sph.phi,ty:controls.target.y},to:camFor(stage),sw:0.9}; }
+canvas.focus({preventScroll:true});
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
