@@ -154,7 +154,7 @@
       <h1 id="title">아톰의 세상과 비트의 세상</h1>
       <p class="cap" id="cap"></p>
       <p class="then" id="then"></p>
-      <a class="next" id="nextLink" href="https://greatsong.github.io/workshop/#why" hidden>워크샵 시작하기 <span aria-hidden="true">→</span></a>
+      <a class="next" id="nextLink" href="https://greatsong.github.io/workshop/" hidden>워크샵 시작하기 <span aria-hidden="true">→</span></a>
     </div>
     <div class="tools">
       <button id="play" type="button" aria-pressed="false">자동 재생</button>
@@ -837,9 +837,9 @@ function goTo(s,opts){
 
 /* ═════════ 화면 글자 ═════════ */
 const $=id=>document.getElementById(id);
-/* 마지막 단계의 '워크샵 시작하기': ?prev(교내 연수)면 이전 학교 앞 화면 지도로, 아니면 워크샵 허브로 */
-const PREV_Q=new URLSearchParams(location.search).has('prev');
-const NEXT_URL=PREV_Q?'https://greatsong.github.io/map/board.html?prev':'https://greatsong.github.io/workshop/#why';
+/* 마지막 단계의 '워크샵 시작하기': 워크샵 허브 첫 화면(접속 주소·오늘의 준비물)으로.
+   진행 순서는 QR → 앞 화면 지도 → 이 인트로 → 워크샵 */
+const NEXT_URL='https://greatsong.github.io/workshop/';
 $('nextLink').href=NEXT_URL;
 const tl=$('tl'), story=$('story');
 TL.forEach((t,i)=>{ const li=document.createElement('li');
